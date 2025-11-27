@@ -1,8 +1,8 @@
 {
-  "name": "admin-template",
+  "name": "plan-visualizer",
   "version": "1.0.0",
   "type": "module",
-  "description": "Lightweight React SPA Admin Template",
+  "description": "Visualize DataFusion execution plans as interactive diagrams",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -13,11 +13,12 @@
   },
   "keywords": [
     "react",
-    "admin",
-    "template",
-    "dashboard",
+    "plan-visualizer",
+    "datafusion",
+    "excalidraw",
     "typescript",
-    "tailwind"
+    "tailwind",
+    "pwa"
   ],
   "author": "",
   "license": "MIT",

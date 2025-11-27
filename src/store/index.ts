@@ -25,7 +25,7 @@ function getInitialTheme(): ThemePreference {
     return { mode: 'system', resolved: 'light' }
   }
   
-  const stored = localStorage.getItem('admin-template-theme') as ThemeMode | null
+  const stored = localStorage.getItem('plan-visualizer-theme') as ThemeMode | null
   const mode = stored || 'system'
   const resolved = mode === 'system' ? getSystemTheme() : mode
   
@@ -37,7 +37,7 @@ function getInitialSidebarCollapsed(): boolean {
     return false
   }
   
-  const stored = localStorage.getItem('admin-template-sidebar-collapsed')
+  const stored = localStorage.getItem('plan-visualizer-sidebar-collapsed')
   return stored === 'true'
 }
 
@@ -82,7 +82,7 @@ export const useAppStore = create<AppStore>()(
             const newCollapsed = !state.sidebarCollapsed
             // Persist to localStorage
             if (typeof localStorage !== 'undefined') {
-              localStorage.setItem('admin-template-sidebar-collapsed', String(newCollapsed))
+              localStorage.setItem('plan-visualizer-sidebar-collapsed', String(newCollapsed))
             }
             return {
               sidebarCollapsed: newCollapsed,
@@ -139,7 +139,7 @@ export const useAppStore = create<AppStore>()(
         
         // Persist to localStorage
         if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('admin-template-theme', mode)
+          localStorage.setItem('plan-visualizer-theme', mode)
         }
         
         // Apply to DOM
@@ -175,7 +175,7 @@ export const useAppStore = create<AppStore>()(
         )
       },
     }),
-    { name: 'admin-template-store' }
+    { name: 'plan-visualizer-store' }
   )
 )
 

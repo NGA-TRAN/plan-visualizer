@@ -179,8 +179,8 @@ This feature extends the existing application with offline capabilities and mult
 
 ### localStorage Keys
 
-- `admin-template-theme`: Theme preference (existing)
-- `admin-template-sidebar-collapsed`: Sidebar state (existing)
+- `plan-visualizer-theme`: Theme preference
+- `plan-visualizer-sidebar-collapsed`: Sidebar state
 - `plan-visualizer-installation-state`: InstallationState JSON
 - `plan-visualizer-install-prompt-dismissed`: Boolean flag
 

@@ -154,8 +154,8 @@ interface BeforeInstallPromptEvent extends Event {
 **Storage**: localStorage
 
 **Keys**:
-- `admin-template-theme`: Theme preference (existing)
-- `admin-template-sidebar-collapsed`: Sidebar state (existing)
+- `plan-visualizer-theme`: Theme preference
+- `plan-visualizer-sidebar-collapsed`: Sidebar state
 - `plan-visualizer-installation-state`: InstallationState JSON
 
 **Contract**:
