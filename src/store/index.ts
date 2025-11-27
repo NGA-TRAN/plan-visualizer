@@ -1,17 +1,15 @@
 // Centralized Zustand Store
-// Single source of truth for: users, activities, metrics, navigation, notifications, theme
+// Single source of truth for: navigation, notifications, theme
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type {
   AppStore,
-  User,
-  Activity,
   Notification,
   ThemeMode,
   ThemePreference,
 } from '@/types'
-import { generateSeedData, generateMetrics } from '@/data/seed'
+import { generateSeedData } from '@/data/seed'
 
 // =============================================================================
 // Theme Helpers
@@ -32,6 +30,15 @@ function getInitialTheme(): ThemePreference {
   const resolved = mode === 'system' ? getSystemTheme() : mode
   
   return { mode, resolved }
+}
+
+function getInitialSidebarCollapsed(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  
+  const stored = localStorage.getItem('admin-template-sidebar-collapsed')
+  return stored === 'true'
 }
 
 function applyTheme(resolved: 'light' | 'dark') {
@@ -60,119 +67,10 @@ export const useAppStore = create<AppStore>()(
   devtools(
     (set, get) => ({
       // Initial state (empty, populated by initializeStore)
-      users: [],
-      activities: [],
-      metrics: [],
       navigationItems: [],
-      sidebarCollapsed: false,
+      sidebarCollapsed: getInitialSidebarCollapsed(),
       notifications: [],
       theme: { mode: 'system', resolved: 'light' },
-
-      // =======================================================================
-      // User Actions
-      // =======================================================================
-
-      addUser: (userData) => {
-        const newUser: User = {
-          ...userData,
-          id: generateId(),
-          createdAt: new Date(),
-        }
-        
-        set(
-          (state) => ({
-            users: [newUser, ...state.users],
-          }),
-          false,
-          'addUser'
-        )
-        
-        // Add activity
-        get().addActivity({
-          type: 'user_created',
-          description: `New user created: ${newUser.name}`,
-          userId: newUser.id,
-        })
-        
-        // Update metrics
-        get().updateMetrics()
-      },
-
-      updateUser: (id, updates) => {
-        set(
-          (state) => ({
-            users: state.users.map((user) =>
-              user.id === id ? { ...user, ...updates } : user
-            ),
-          }),
-          false,
-          'updateUser'
-        )
-        
-        const user = get().users.find((u) => u.id === id)
-        if (user) {
-          get().addActivity({
-            type: 'user_updated',
-            description: `User updated: ${user.name}`,
-            userId: id,
-          })
-        }
-        
-        get().updateMetrics()
-      },
-
-      deleteUser: (id) => {
-        const user = get().users.find((u) => u.id === id)
-        
-        set(
-          (state) => ({
-            users: state.users.filter((user) => user.id !== id),
-          }),
-          false,
-          'deleteUser'
-        )
-        
-        if (user) {
-          get().addActivity({
-            type: 'user_deleted',
-            description: `User deleted: ${user.name}`,
-            userId: id,
-          })
-        }
-        
-        get().updateMetrics()
-      },
-
-      // =======================================================================
-      // Activity Actions
-      // =======================================================================
-
-      addActivity: (activityData) => {
-        const newActivity: Activity = {
-          ...activityData,
-          id: generateId(),
-          timestamp: new Date(),
-        }
-        
-        set(
-          (state) => ({
-            activities: [newActivity, ...state.activities].slice(0, 50), // Keep last 50
-          }),
-          false,
-          'addActivity'
-        )
-      },
-
-      // =======================================================================
-      // Metrics Actions
-      // =======================================================================
-
-      updateMetrics: () => {
-        const { users } = get()
-        const newMetrics = generateMetrics(users)
-        
-        set({ metrics: newMetrics }, false, 'updateMetrics')
-      },
 
       // =======================================================================
       // Navigation Actions
@@ -180,9 +78,16 @@ export const useAppStore = create<AppStore>()(
 
       toggleSidebar: () => {
         set(
-          (state) => ({
-            sidebarCollapsed: !state.sidebarCollapsed,
-          }),
+          (state) => {
+            const newCollapsed = !state.sidebarCollapsed
+            // Persist to localStorage
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('admin-template-sidebar-collapsed', String(newCollapsed))
+            }
+            return {
+              sidebarCollapsed: newCollapsed,
+            }
+          },
           false,
           'toggleSidebar'
         )
@@ -254,17 +159,16 @@ export const useAppStore = create<AppStore>()(
       initializeStore: () => {
         const seedData = generateSeedData()
         const theme = getInitialTheme()
+        const sidebarCollapsed = getInitialSidebarCollapsed()
         
         // Apply initial theme
         applyTheme(theme.resolved)
         
         set(
           {
-            users: seedData.users,
-            activities: seedData.activities,
-            metrics: seedData.metrics,
             navigationItems: seedData.navigationItems,
             theme,
+            sidebarCollapsed,
           },
           false,
           'initializeStore'
@@ -279,9 +183,6 @@ export const useAppStore = create<AppStore>()(
 // Selector Hooks (for convenience)
 // =============================================================================
 
-export const useUsers = () => useAppStore((state) => state.users)
-export const useActivities = () => useAppStore((state) => state.activities)
-export const useMetrics = () => useAppStore((state) => state.metrics)
 export const useNavigationItems = () => useAppStore((state) => state.navigationItems)
 export const useSidebarCollapsed = () => useAppStore((state) => state.sidebarCollapsed)
 export const useNotifications = () => useAppStore((state) => state.notifications)

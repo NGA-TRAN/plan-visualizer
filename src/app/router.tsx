@@ -10,9 +10,6 @@ import { useAppStore } from '@/store'
 import { cn } from '@/shared/utils/cn'
 
 // Lazy load pages for code splitting
-const Dashboard = lazy(() => import('@/features/dashboard/components/Dashboard').then(m => ({ default: m.Dashboard })))
-const UsersPage = lazy(() => import('@/features/users/components/UsersPage').then(m => ({ default: m.UsersPage })))
-const FormDemo = lazy(() => import('@/features/forms/components/FormDemo').then(m => ({ default: m.FormDemo })))
 const PlanVisualizerPage = lazy(() => import('@/features/plan-visualizer/components/PlanVisualizerPage').then(m => ({ default: m.PlanVisualizerPage })))
 
 // Layout component with Sidebar
@@ -62,27 +59,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: 'users',
-        element: <UsersPage />,
-      },
-      {
-        path: 'forms',
-        element: <FormDemo />,
-      },
-      {
-        path: 'plan-visualizer',
         element: <PlanVisualizerPage />,
-      },
-      {
-        path: 'products',
-        element: (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            Products page coming soon...
-          </div>
-        ),
       },
       {
         path: 'settings/*',

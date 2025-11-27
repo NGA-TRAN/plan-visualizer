@@ -9,6 +9,7 @@ import { PlanInput } from './PlanInput'
 import { ExcalidrawCanvas } from './ExcalidrawCanvas'
 import { usePlanConverter, shouldShowPerformanceWarning } from '../hooks/usePlanConverter'
 import { SAMPLE_PLAN } from '../types'
+import { savePlanToStorage } from '@/features/offline/services/storageManager'
 
 export function PlanVisualizerPage() {
   // State
@@ -20,7 +21,7 @@ export function PlanVisualizerPage() {
   const { state, convert, displayScene } = usePlanConverter()
   
   // Handle visualization
-  const handleVisualize = useCallback(() => {
+  const handleVisualize = useCallback(async () => {
     // T010: Empty input validation
     if (!inputText.trim()) {
       notify.warning('Please enter an execution plan to visualize.')
@@ -31,6 +32,16 @@ export function PlanVisualizerPage() {
     const result = convert(inputText)
     
     if (result.success) {
+      // Save plan to IndexedDB for offline access
+      try {
+        if (displayScene) {
+          await savePlanToStorage(inputText.trim(), displayScene)
+        }
+      } catch (error) {
+        // Don't fail visualization if storage fails, just log it
+        console.warn('Failed to save plan to local storage:', error)
+      }
+      
       // Check for performance warning
       if (result.nodeCount && shouldShowPerformanceWarning(result.nodeCount)) {
         notify.warning(
@@ -43,7 +54,7 @@ export function PlanVisualizerPage() {
       // Error is already stored in state, also show toast
       notify.error(result.error || 'Failed to convert plan')
     }
-  }, [inputText, convert, notify])
+  }, [inputText, convert, notify, displayScene])
 
   // Handle loading sample plan
   const handleLoadSample = useCallback(() => {
@@ -55,21 +66,21 @@ export function PlanVisualizerPage() {
   const isLoading = state.status === 'converting'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
           Plan Visualizer
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
           Visualize DataFusion Physical Execution Plans as interactive diagrams
         </p>
       </div>
 
       {/* Main Content - Vertical Layout */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         {/* Input Panel (Top) */}
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <PlanInput
             value={inputText}
             onChange={setInputText}
@@ -81,7 +92,7 @@ export function PlanVisualizerPage() {
         </Card>
 
         {/* Visualization Panel (Bottom) */}
-        <div className="h-[600px] min-h-[500px]">
+        <div className="h-[400px] sm:h-[500px] lg:h-[600px] min-h-[400px] sm:min-h-[500px]">
           <ExcalidrawCanvas
             scene={displayScene}
             theme={theme}
@@ -92,7 +103,7 @@ export function PlanVisualizerPage() {
       {/* Help Text */}
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p>
-          <strong>Tip:</strong> Paste your DataFusion EXPLAIN output directly into the input area.
+          <strong>Tip:</strong> Paste your DataFusion EXPLAIN output (including or excluding the SQL query) directly into the input area.
         </p>
         <p>
           The visualizer supports Physical Execution Plans from Apache DataFusion.

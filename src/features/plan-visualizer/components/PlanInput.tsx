@@ -54,12 +54,14 @@ export function PlanInput({
           onKeyDown={handleKeyDown}
           placeholder={`Paste your DataFusion Physical Execution Plan here...\n\nExample:\nProjectionExec: expr=[id@0 as id]\n  FilterExec: id@0 > 100\n    ParquetExec: file_groups={...}`}
           className={cn(
-            'w-full h-full min-h-[200px] p-4 font-mono text-sm',
+            'w-full h-full min-h-[150px] sm:min-h-[200px] p-3 sm:p-4 font-mono text-xs sm:text-sm',
             'bg-gray-50 dark:bg-gray-800/50',
             'border rounded-lg resize-none',
             'placeholder:text-gray-400 dark:placeholder:text-gray-500',
             'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
             'transition-colors',
+            // Prevent zoom on iOS when focusing input
+            'text-base sm:text-sm',
             error
               ? 'border-red-300 dark:border-red-700'
               : 'border-gray-200 dark:border-gray-700'
@@ -84,15 +86,15 @@ export function PlanInput({
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
+        <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
           Press <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">Ctrl</kbd>+<kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">Enter</kbd> to visualize
         </p>
         <Button
           onClick={onVisualize}
           isLoading={isLoading}
           disabled={isLoading}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           <Play className="w-4 h-4" />
           Visualize

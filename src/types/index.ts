@@ -98,20 +98,6 @@ export interface ThemePreference {
 // =============================================================================
 
 export interface AppStore {
-  // Users
-  users: User[]
-  addUser: (user: Omit<User, 'id' | 'createdAt'>) => void
-  updateUser: (id: string, updates: Partial<User>) => void
-  deleteUser: (id: string) => void
-
-  // Activities
-  activities: Activity[]
-  addActivity: (activity: Omit<Activity, 'id' | 'timestamp'>) => void
-
-  // Metrics
-  metrics: MetricCard[]
-  updateMetrics: () => void
-
   // Navigation
   navigationItems: NavigationItem[]
   sidebarCollapsed: boolean
