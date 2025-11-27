@@ -1,13 +1,18 @@
 // ExcalidrawCanvas Component
 // Wrapper for @excalidraw/excalidraw with error boundary and theme support
 
-import { Component, type ReactNode, useEffect, useState } from 'react'
+import { Component, type ReactNode, useEffect, useRef } from 'react'
 import { Excalidraw } from '@excalidraw/excalidraw'
 import '@excalidraw/excalidraw/index.css'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/components'
 import { cn } from '@/shared/utils/cn'
 import type { ExcalidrawCanvasProps } from '../types'
+
+// Type for Excalidraw API - using any to avoid import issues
+type ExcalidrawAPI = {
+  updateScene: (sceneData: { elements?: any[]; appState?: any; files?: any }) => void
+}
 
 // Error Boundary for catching Excalidraw render failures
 interface ErrorBoundaryState {
@@ -95,62 +100,36 @@ function EmptyCanvas() {
 }
 
 export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: ExcalidrawCanvasProps) {
-  // Support both prop-based scene (from plan-viz) and fallback to loading sample.excalidraw
-  const [loadedScene, setLoadedScene] = useState<any | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  // Use prop scene if provided, otherwise load sample.excalidraw
-  const scene = propScene || loadedScene
-
-  useEffect(() => {
-    // Only fetch sample if no scene prop is provided
-    if (propScene) {
-      return
-    }
-
-    let isMounted = true
-
-    fetch('/sample.excalidraw')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load sample.excalidraw: ${res.status}`)
-        return res.json()
-      })
-      .then((data) => {
-        if (isMounted) {
-          setLoadedScene(data)
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          console.error('Error loading sample.excalidraw', err)
-          setError('Failed to load sample visualization data.')
-        }
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [propScene])
-
+  // Use the scene prop directly from plan-viz conversion
+  const scene = propScene
   const elements = (scene as any)?.elements as any[] | undefined
+  const excalidrawAPIRef = useRef<ExcalidrawAPI | null>(null)
 
-  // Show error state if sample scene failed to load
-  if (error) {
-    return (
-      <div className={cn(
-        'h-full min-h-[400px] rounded-lg border',
-        'bg-white dark:bg-gray-800',
-        'border-red-200 dark:border-red-700'
-      )}>
-        <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-          <AlertTriangle className="w-8 h-8 text-red-500 mb-2" />
-          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-        </div>
-      </div>
-    )
-  }
+  // Generate a key based on scene content to help React detect changes
+  const sceneKey = scene && elements 
+    ? `scene-${elements.length}-${JSON.stringify(elements[0]?.id || '')}`
+    : 'empty'
 
-  // While loading, or if no elements yet, show empty state
+  // Update scene when propScene changes
+  useEffect(() => {
+    if (scene && excalidrawAPIRef.current && elements && elements.length > 0) {
+      // Use the scene as returned by plan-viz conversion,
+      // only adjusting the background color to match the app theme.
+      const mergedScene = {
+        elements: (scene as any).elements || [],
+        appState: {
+          ...(scene as any)?.appState,
+          viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+        },
+        files: (scene as any).files || {},
+      }
+      
+      // Update the scene using the API
+      excalidrawAPIRef.current.updateScene(mergedScene)
+    }
+  }, [scene, theme, elements])
+
+  // Show empty state if no scene or elements
   if (!scene || !elements || elements.length === 0) {
     return (
       <div className={cn(
@@ -163,7 +142,7 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
     )
   }
 
-  // Use the scene as returned by plan-viz / sample.excalidraw,
+  // Use the scene as returned by plan-viz conversion,
   // only adjusting the background color to match the app theme.
   const mergedScene = {
     ...(scene as any),
@@ -182,8 +161,23 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
       )}
     >
       <ExcalidrawErrorBoundary>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0" key={sceneKey}>
           <Excalidraw
+            excalidrawAPI={(api) => {
+              excalidrawAPIRef.current = api
+              // If API becomes available and we have a scene, update it immediately
+              if (scene && elements && elements.length > 0) {
+                const mergedScene = {
+                  elements: (scene as any).elements || [],
+                  appState: {
+                    ...(scene as any)?.appState,
+                    viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+                  },
+                  files: (scene as any).files || {},
+                }
+                api.updateScene(mergedScene)
+              }
+            }}
             initialData={mergedScene}
             theme={theme}
             // Keep sidebar non-docked so it doesn't permanently occupy a large column
