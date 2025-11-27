@@ -1,0 +1,31 @@
+# plan-visualizer Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-11-26
+
+## Active Technologies
+
+- TypeScript 5.x with React 18.2+ + React, React Router v6, Zustand, Tailwind CSS, Recharts (charts), (001-admin-template)
+- TypeScript 5.x with React 18+ + plan-viz, @excalidraw/excalidraw, Zustand (002-plan-visualizer)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript 5.x with React 18.2+: Follow standard conventions
+
+## Recent Changes
+- 001-admin-template: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+- 001-admin-template: Added TypeScript 5.x with React 18.2+ + React, React Router v6, Zustand, Tailwind CSS, Recharts (charts),
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
