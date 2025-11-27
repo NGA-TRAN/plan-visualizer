@@ -1,0 +1,88 @@
+/* Theme CSS Variables
+ * Defines color schemes for light and dark modes
+ * Used in conjunction with Tailwind's dark: variant
+ */
+
+:root {
+  /* Light theme (default) */
+  --color-background: 249 250 251; /* gray-50 */
+  --color-foreground: 17 24 39; /* gray-900 */
+  --color-card: 255 255 255; /* white */
+  --color-card-foreground: 17 24 39; /* gray-900 */
+  --color-border: 229 231 235; /* gray-200 */
+  --color-input: 229 231 235; /* gray-200 */
+  --color-primary: 37 99 235; /* blue-600 */
+  --color-primary-foreground: 255 255 255; /* white */
+  --color-secondary: 243 244 246; /* gray-100 */
+  --color-secondary-foreground: 17 24 39; /* gray-900 */
+  --color-muted: 243 244 246; /* gray-100 */
+  --color-muted-foreground: 107 114 128; /* gray-500 */
+  --color-accent: 243 244 246; /* gray-100 */
+  --color-accent-foreground: 17 24 39; /* gray-900 */
+  --color-destructive: 220 38 38; /* red-600 */
+  --color-destructive-foreground: 255 255 255; /* white */
+
+  /* Tooltip colors */
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e5e7eb;
+}
+
+.dark {
+  /* Dark theme */
+  --color-background: 17 24 39; /* gray-900 */
+  --color-foreground: 243 244 246; /* gray-100 */
+  --color-card: 31 41 55; /* gray-800 */
+  --color-card-foreground: 243 244 246; /* gray-100 */
+  --color-border: 55 65 81; /* gray-700 */
+  --color-input: 55 65 81; /* gray-700 */
+  --color-primary: 59 130 246; /* blue-500 */
+  --color-primary-foreground: 255 255 255; /* white */
+  --color-secondary: 55 65 81; /* gray-700 */
+  --color-secondary-foreground: 243 244 246; /* gray-100 */
+  --color-muted: 55 65 81; /* gray-700 */
+  --color-muted-foreground: 156 163 175; /* gray-400 */
+  --color-accent: 55 65 81; /* gray-700 */
+  --color-accent-foreground: 243 244 246; /* gray-100 */
+  --color-destructive: 239 68 68; /* red-500 */
+  --color-destructive-foreground: 255 255 255; /* white */
+
+  /* Tooltip colors */
+  --tooltip-bg: #1f2937;
+  --tooltip-border: #374151;
+}
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Focus visible styles for accessibility */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+
+/* Selection colors */
+::selection {
+  background-color: rgb(var(--color-primary) / 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-muted-foreground) / 0.5);
+}
+

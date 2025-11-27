@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+| Principle | Check | Status |
+|-----------|-------|--------|
+| I. Deep Module Architecture | Components have ≤5 props, encapsulate complexity internally | ☐ |
+| II. Render-as-You-Fetch | No fetch waterfalls; data loading parallelized via TanStack Query | ☐ |
+| III. State Colocation | UI state local, server state in TanStack Query, global state justified | ☐ |
+| IV. Feature-Based Organization | Code organized by feature in `src/features/<name>/` | ☐ |
+| V. Logic Extraction | Components >150 lines have logic extracted to hooks | ☐ |
+
+**Technology Stack (Required):**
+- React 18+ (functional components only)
+- TanStack Query v5+ for server state
+- Tailwind CSS or zero-runtime CSS solution
 
 ## Project Structure
 
@@ -78,9 +89,14 @@ backend/
 
 frontend/
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
+│   ├── features/           # Constitution: Feature-based organization (Principle IV)
+│   │   ├── auth/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   └── api/
+│   │   └── [feature-name]/
+│   ├── shared/             # Truly shared utilities only
+│   └── lib/                # Generic UI primitives
 └── tests/
 
 # [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
