@@ -52,6 +52,9 @@ function RootLayout() {
   )
 }
 
+// Base path for GitHub Pages (repository name)
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -71,4 +74,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+], {
+  basename,
+})
