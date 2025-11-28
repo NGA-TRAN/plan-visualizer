@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
 import { LoadingSpinner } from '@/shared/components'
 import { Sidebar, MobileMenuButton } from '@/features/navigation/components/Sidebar'
+import { ThemeToggle } from '@/features/theme/components/ThemeToggle'
 import { useAppStore } from '@/store'
 import { cn } from '@/shared/utils/cn'
 
@@ -37,28 +38,31 @@ function RootLayout() {
             </h1>
           </div>
           
-          {/* Right: Info Links */}
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-            <span>
-              Powered by{' '}
+          {/* Right: Theme Toggle and Info Links */}
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <span>
+                Powered by{' '}
+                <a 
+                  href="https://www.npmjs.com/package/plan-viz" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
+                >
+                  plan-viz
+                </a>
+              </span>
+              <span className="hidden sm:inline">•</span>
               <a 
-                href="https://www.npmjs.com/package/plan-viz" 
+                href="https://github.com/NGA-TRAN/plan-visualizer" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
               >
-                plan-viz
+                Report bugs
               </a>
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <a 
-              href="https://github.com/NGA-TRAN/plan-visualizer" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
-            >
-              Report bugs
-            </a>
+            </div>
+            <ThemeToggle />
           </div>
         </header>
 

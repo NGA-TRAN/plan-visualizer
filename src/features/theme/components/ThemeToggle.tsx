@@ -15,11 +15,29 @@ export function ThemeToggle({ variant = 'button' }: ThemeToggleProps) {
   const { mode, resolved, setThemeMode, toggleTheme } = useTheme()
 
   if (variant === 'button') {
+    // toggleTheme updates the app theme (via store) which:
+    // 1. Adds/removes 'dark' class on document.documentElement (for Tailwind dark: classes)
+    // 2. Updates the store's theme state
+    // 3. PlanVisualizerPage subscribes to theme.resolved and passes it to ExcalidrawCanvas
+    // 4. ExcalidrawCanvas receives theme prop and passes it to Excalidraw component
+    // This ensures both the app UI and Excalidraw panel update together
     return (
       <Button
         variant="ghost"
         size="sm"
-        onClick={toggleTheme}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          toggleTheme()
+          // Force immediate DOM update as backup
+          const html = document.documentElement
+          const newTheme = resolved === 'light' ? 'dark' : 'light'
+          if (newTheme === 'dark') {
+            html.classList.add('dark')
+          } else {
+            html.classList.remove('dark')
+          }
+        }}
         aria-label={`Switch to ${resolved === 'light' ? 'dark' : 'light'} mode`}
       >
         {resolved === 'light' ? (

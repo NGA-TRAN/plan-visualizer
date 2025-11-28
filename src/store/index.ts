@@ -42,13 +42,26 @@ function getInitialSidebarCollapsed(): boolean {
 }
 
 function applyTheme(resolved: 'light' | 'dark') {
-  if (typeof document === 'undefined') return
-  
-  if (resolved === 'dark') {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
+  if (typeof document === 'undefined' || !document.documentElement) {
+    return
   }
+  
+  const htmlElement = document.documentElement
+  
+  // Apply theme class - Tailwind will respond to this
+  // Force synchronous update to ensure Tailwind dark: classes respond
+  if (resolved === 'dark') {
+    htmlElement.classList.add('dark')
+    // Force a reflow to ensure styles are recalculated
+    void htmlElement.offsetHeight
+  } else {
+    htmlElement.classList.remove('dark')
+    // Force a reflow to ensure styles are recalculated
+    void htmlElement.offsetHeight
+  }
+  
+  // Also set data attribute as backup (some CSS frameworks use this)
+  htmlElement.setAttribute('data-theme', resolved)
 }
 
 // =============================================================================
@@ -142,14 +155,27 @@ export const useAppStore = create<AppStore>()(
           localStorage.setItem('plan-visualizer-theme', mode)
         }
         
-        // Apply to DOM
+        // Apply to DOM immediately - this is critical for Tailwind dark mode
         applyTheme(resolved)
         
+        // Update store state
         set(
           { theme: { mode, resolved } },
           false,
           'setThemeMode'
         )
+        
+        // Ensure theme is applied (in case DOM wasn't ready)
+        // Use both immediate and deferred application to catch all cases
+        if (typeof requestAnimationFrame !== 'undefined') {
+          requestAnimationFrame(() => {
+            applyTheme(resolved)
+          })
+        } else {
+          setTimeout(() => {
+            applyTheme(resolved)
+          }, 0)
+        }
       },
 
       // =======================================================================

@@ -4,7 +4,8 @@ import { App } from './app/App'
 import { useAppStore } from './store'
 import './index.css'
 
-// Initialize store with seed data
+// Initialize store with seed data BEFORE rendering
+// This ensures theme is applied immediately to prevent flash
 useAppStore.getState().initializeStore()
 
 createRoot(document.getElementById('root')!).render(

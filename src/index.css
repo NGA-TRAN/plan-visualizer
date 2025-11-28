@@ -1,4 +1,9 @@
 @import "tailwindcss";
+
+/* Tailwind v4 Dark Mode Configuration */
+/* Configure dark mode to use .dark class on html element */
+@variant dark (&:where(.dark, .dark *));
+
 @import "./features/theme/styles/theme.css";
 
 /* Tailwind v4 theme configuration */
