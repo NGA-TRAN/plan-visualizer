@@ -9,6 +9,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-26
 - N/A (workflow files stored in `.github/workflows/`) (004-github-pages-deployment)
 - TypeScript 5.9+ + React 18.3+, Tailwind CSS 4.1+, @excalidraw/excalidraw 0.18+, plan-viz 0.1.4, Zustand 5.0+ (005-ui-improvements)
 - Browser localStorage (for panel size preferences), IndexedDB (existing offline storage) (005-ui-improvements)
+- Markdown (GitHub Flavored Markdown) + None (plain markdown file) (006-readme-documentation)
+- N/A (static file in repository) (006-readme-documentation)
 
 - TypeScript 5.x with React 18.2+ + React, React Router v6, Zustand, Tailwind CSS, Recharts (charts), (001-admin-template)
 - TypeScript 5.x with React 18+ + plan-viz, @excalidraw/excalidraw, Zustand (002-plan-visualizer)
@@ -29,9 +31,9 @@ npm test && npm run lint
 TypeScript 5.x with React 18.2+: Follow standard conventions
 
 ## Recent Changes
+- 006-readme-documentation: Added Markdown (GitHub Flavored Markdown) + None (plain markdown file)
 - 005-ui-improvements: Added TypeScript 5.9+ + React 18.3+, Tailwind CSS 4.1+, @excalidraw/excalidraw 0.18+, plan-viz 0.1.4, Zustand 5.0+
 - 004-github-pages-deployment: Added YAML (GitHub Actions workflow syntax), Node.js 18+ (for npm/build commands)
-- 003-offline-multi-platform: Added TypeScript 5.9+ with React 18.3+
 
 
 <!-- MANUAL ADDITIONS START -->
