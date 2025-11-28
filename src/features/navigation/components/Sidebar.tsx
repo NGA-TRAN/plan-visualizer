@@ -42,9 +42,11 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
           {!sidebarCollapsed && (
-            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              Admin
-            </span>
+            <img 
+              src="/icons/icon-192x192.png" 
+              alt="Plan Visualizer" 
+              className="h-16 w-16"
+            />
           )}
           <Button
             variant="ghost"

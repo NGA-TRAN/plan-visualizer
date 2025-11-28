@@ -15,25 +15,6 @@ export function generateNavigationItems(): NavigationItem[] {
       icon: 'workflow',
       route: '/',
     },
-    {
-      id: 'nav-settings',
-      label: 'Settings',
-      icon: 'settings',
-      children: [
-        {
-          id: 'nav-profile',
-          label: 'Profile',
-          icon: 'user',
-          route: '/settings/profile',
-        },
-        {
-          id: 'nav-preferences',
-          label: 'Preferences',
-          icon: 'sliders',
-          route: '/settings/preferences',
-        },
-      ],
-    },
   ]
 }
 

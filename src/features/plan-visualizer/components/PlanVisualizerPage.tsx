@@ -7,9 +7,11 @@ import { useAppStore } from '@/store'
 import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 import { PlanInput } from './PlanInput'
 import { ExcalidrawCanvas } from './ExcalidrawCanvas'
-import { usePlanConverter, shouldShowPerformanceWarning } from '../hooks/usePlanConverter'
-import { SAMPLE_PLAN } from '../types'
+import { usePlanConverter } from '../hooks/usePlanConverter'
+import { useResizablePanels } from '../hooks/useResizablePanels'
+import { SAMPLE_PLAN, SAMPLE_PLAN_2 } from '../types'
 import { savePlanToStorage } from '@/features/offline/services/storageManager'
+import { cn } from '@/shared/utils/cn'
 
 export function PlanVisualizerPage() {
   // State
@@ -41,58 +43,74 @@ export function PlanVisualizerPage() {
         // Don't fail visualization if storage fails, just log it
         console.warn('Failed to save plan to local storage:', error)
       }
-      
-      // Check for performance warning
-      if (result.nodeCount && shouldShowPerformanceWarning(result.nodeCount)) {
-        notify.warning(
-          `This plan has ${result.nodeCount} nodes. Performance may be affected for very large plans.`
-        )
-      } else {
-        notify.success('Plan visualized successfully!')
-      }
     } else {
       // Error is already stored in state, also show toast
       notify.error(result.error || 'Failed to convert plan')
     }
   }, [inputText, convert, notify, displayScene])
 
-  // Handle loading sample plan
+  // Handle loading sample plan (backward compatibility)
   const handleLoadSample = useCallback(() => {
     setInputText(SAMPLE_PLAN)
-    notify.info('Sample plan loaded. Click Visualize to see the diagram.')
-  }, [notify])
+  }, [])
 
-  // T011: Loading state is tracked via state.status === 'converting'
-  const isLoading = state.status === 'converting'
+  // Handle loading sample plan 1
+  const handleLoadSample1 = useCallback(() => {
+    setInputText(SAMPLE_PLAN)
+  }, [])
+
+  // Handle loading sample plan 2
+  const handleLoadSample2 = useCallback(() => {
+    setInputText(SAMPLE_PLAN_2)
+  }, [])
+
+  // Resizable panels hook
+  const { containerRef, inputHeight, isDragging, handleMouseDown } = useResizablePanels()
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Plan Visualizer
-        </h1>
-        <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          Visualize DataFusion Physical Execution Plans as interactive diagrams
-        </p>
-      </div>
+    <div className="px-2 sm:px-0">
+      {/* Main Content - Resizable Layout */}
+      <div ref={containerRef} className="flex flex-col gap-0 h-[calc(100vh-64px)]">
+        {/* Input Panel */}
+        <div 
+          style={{ 
+            height: `${inputHeight * 100}%`,
+            minHeight: '150px',
+            maxHeight: '80%',
+          }}
+          className="flex-shrink-0"
+        >
+          <Card className="p-3 sm:p-4 h-full">
+            <PlanInput
+              value={inputText}
+              onChange={setInputText}
+              onVisualize={handleVisualize}
+              error={state.status === 'error' ? state.errorMessage : null}
+              onLoadSample={handleLoadSample}
+              onLoadSample1={handleLoadSample1}
+              onLoadSample2={handleLoadSample2}
+            />
+          </Card>
+        </div>
 
-      {/* Main Content - Vertical Layout */}
-      <div className="flex flex-col gap-4 sm:gap-6">
-        {/* Input Panel (Top) */}
-        <Card className="p-3 sm:p-4">
-          <PlanInput
-            value={inputText}
-            onChange={setInputText}
-            onVisualize={handleVisualize}
-            isLoading={isLoading}
-            error={state.status === 'error' ? state.errorMessage : null}
-            onLoadSample={handleLoadSample}
-          />
-        </Card>
+        {/* Resizer Handle */}
+        <div
+          className={cn(
+            'h-1 bg-gray-200 dark:bg-gray-700 cursor-row-resize hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors',
+            isDragging && 'bg-primary-500'
+          )}
+          onMouseDown={handleMouseDown}
+          aria-label="Resize panels"
+        />
 
-        {/* Visualization Panel (Bottom) */}
-        <div className="h-[400px] sm:h-[500px] lg:h-[600px] min-h-[400px] sm:min-h-[500px]">
+        {/* Visualization Panel */}
+        <div 
+          style={{ 
+            flex: 1,
+            minHeight: '200px',
+          }}
+          className="flex-shrink-0"
+        >
           <ExcalidrawCanvas
             scene={displayScene}
             theme={theme}

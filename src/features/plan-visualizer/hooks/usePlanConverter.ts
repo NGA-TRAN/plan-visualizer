@@ -68,14 +68,52 @@ export function usePlanConverter(): UsePlanConverterReturn {
       const elements = (scene.elements ?? []) as readonly ExcalidrawElement[]
       const nodeCount = elements.length
 
+      // Calculate center and translate elements to the right to center them
+      let centeredScene = scene
+      if (elements.length > 0) {
+        const bounds = calculateElementBounds(elements)
+        
+        if (bounds) {
+          // Calculate the center X of all elements
+          const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2
+          
+          // Target center position - move elements so their center is at this X position
+          // Using a fixed large value to ensure elements are moved well to the right
+          const targetCenterX = 800
+          
+          // Calculate how much to move elements to the right
+          const offsetX = targetCenterX - centerX
+          
+          // Only translate if offset is significant (more than 50px)
+          if (Math.abs(offsetX) > 50) {
+            // Translate all elements to the right to center them
+            const translatedElements = (elements as any[]).map((el: any) => {
+              if (el.x !== undefined && typeof el.x === 'number') {
+                return {
+                  ...el,
+                  x: el.x + offsetX,
+                }
+              }
+              return el
+            })
+            
+            // Update scene with translated elements
+            centeredScene = {
+              ...scene,
+              elements: translatedElements,
+            }
+          }
+        }
+      }
+
       // Update state with success
       setState({
         status: 'success',
         errorMessage: null,
         elements,
         previousElements: elements, // Update previous on success
-        scene,
-        previousScene: scene,
+        scene: centeredScene,
+        previousScene: centeredScene,
       })
 
       return { 
@@ -116,6 +154,35 @@ export function usePlanConverter(): UsePlanConverterReturn {
     displayElements,
     displayScene,
   }
+}
+
+/**
+ * Calculate bounding box of all elements
+ */
+function calculateElementBounds(elements: readonly ExcalidrawElement[]): { minX: number; maxX: number; minY: number; maxY: number } | null {
+  if (!elements || elements.length === 0) return null
+  
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  
+  elements.forEach(el => {
+    if (el.x !== undefined && typeof el.x === 'number') {
+      const elementWidth = (el.width && typeof el.width === 'number') ? el.width : 0
+      const elementHeight = (el.height && typeof el.height === 'number') ? el.height : 0
+      minX = Math.min(minX, el.x)
+      maxX = Math.max(maxX, el.x + elementWidth)
+      if (el.y !== undefined && typeof el.y === 'number') {
+        minY = Math.min(minY, el.y)
+        maxY = Math.max(maxY, el.y + elementHeight)
+      }
+    }
+  })
+  
+  if (minX === Infinity || maxX === -Infinity || minY === Infinity || maxY === -Infinity) return null
+  
+  return { minX, maxX, minY, maxY }
 }
 
 /**
