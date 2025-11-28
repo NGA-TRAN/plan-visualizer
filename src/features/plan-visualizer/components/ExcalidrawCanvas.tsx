@@ -107,24 +107,29 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
   const elements = (scene as any)?.elements as any[] | undefined
   const excalidrawAPIRef = useRef<ExcalidrawAPI | null>(null)
 
-  // Generate a key based on scene content to help React detect changes
+  // Generate a key based on scene content and theme to help React detect changes
   const sceneKey = scene && elements 
-    ? `scene-${elements.length}-${JSON.stringify(elements[0]?.id || '')}`
-    : 'empty'
+    ? `scene-${theme}-${elements.length}-${JSON.stringify(elements[0]?.id || '')}`
+    : `empty-${theme}`
 
   // Update scene when propScene changes and center the view
   useEffect(() => {
     if (scene && excalidrawAPIRef.current && elements && elements.length > 0) {
+      // Get current app state to preserve user's view position
+      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {}
+      
       // Use the scene as returned by plan-viz conversion,
-      // preserving scrollX/scrollY for centering and adjusting the background color to match the app theme.
+      // preserving scrollX/scrollY for centering.
+      // Let Excalidraw handle background color automatically based on theme prop.
       const mergedScene = {
         elements: (scene as any).elements || [],
         appState: {
           ...(scene as any)?.appState,
-          viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+          ...currentAppState,
+          // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
           // Preserve scrollX and scrollY for centering
-          scrollX: (scene as any)?.appState?.scrollX ?? 0,
-          scrollY: (scene as any)?.appState?.scrollY ?? 0,
+          scrollX: currentAppState.scrollX ?? (scene as any)?.appState?.scrollX ?? 0,
+          scrollY: currentAppState.scrollY ?? (scene as any)?.appState?.scrollY ?? 0,
           // Collapse sidebar by default
           sidebarOpen: false,
         },
@@ -135,7 +140,22 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
       excalidrawAPIRef.current.updateScene(mergedScene)
       
     }
-  }, [scene, theme, elements])
+  }, [scene, elements])
+
+  // Update when theme changes to ensure Excalidraw picks up the theme
+  useEffect(() => {
+    if (excalidrawAPIRef.current && scene && elements && elements.length > 0) {
+      // Force Excalidraw to update by calling updateScene with current state
+      // This ensures theme changes are reflected
+      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {}
+      excalidrawAPIRef.current.updateScene({
+        appState: {
+          ...currentAppState,
+          // Let Excalidraw handle viewBackgroundColor based on theme prop
+        },
+      })
+    }
+  }, [theme, scene, elements])
 
   // Show empty state if no scene or elements
   if (!scene || !elements || elements.length === 0) {
@@ -151,12 +171,13 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
   }
 
   // Use the scene as returned by plan-viz conversion,
-  // preserving scrollX/scrollY for centering and adjusting the background color to match the app theme.
+  // preserving scrollX/scrollY for centering.
+  // Let Excalidraw handle background color automatically based on theme prop.
   const mergedScene = {
     ...(scene as any),
     appState: {
       ...(scene as any)?.appState,
-      viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+      // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
       // Preserve scrollX and scrollY for centering
       scrollX: (scene as any)?.appState?.scrollX ?? 0,
       scrollY: (scene as any)?.appState?.scrollY ?? 0,
@@ -184,7 +205,7 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
                   elements: (scene as any).elements || [],
                   appState: {
                     ...(scene as any)?.appState,
-                    viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+                    // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
                     // Preserve scrollX and scrollY for centering
                     scrollX: (scene as any)?.appState?.scrollX ?? 0,
                     scrollY: (scene as any)?.appState?.scrollY ?? 0,

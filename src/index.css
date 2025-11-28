@@ -2,6 +2,8 @@
 @import "./features/theme/styles/theme.css";
 
 /* Tailwind v4 theme configuration */
+/* Note: darkMode: 'class' in tailwind.config.js should work, but if not,
+   Tailwind v4 defaults to class-based dark mode when .dark class is present */
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
   

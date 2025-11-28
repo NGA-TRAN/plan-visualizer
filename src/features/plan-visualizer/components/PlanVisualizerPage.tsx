@@ -16,6 +16,8 @@ import { cn } from '@/shared/utils/cn'
 export function PlanVisualizerPage() {
   // State
   const [inputText, setInputText] = useState('')
+  // Subscribe to theme changes from store - this ensures Excalidraw updates when theme toggle is clicked
+  // The theme prop is passed to ExcalidrawCanvas which passes it to Excalidraw component
   const theme = useAppStore((state) => state.theme.resolved)
   const { notify } = useNotifications()
   
