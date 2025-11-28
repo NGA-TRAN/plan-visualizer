@@ -43,7 +43,7 @@ export function Sidebar() {
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
           {!sidebarCollapsed && (
             <img 
-              src="/icons/icon-192x192.png" 
+              src={`${import.meta.env.BASE_URL}icons/icon-192x192.png`}
               alt="Plan Visualizer" 
               className="h-16 w-16"
             />
