@@ -5,7 +5,6 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
 import { LoadingSpinner } from '@/shared/components'
 import { Sidebar, MobileMenuButton } from '@/features/navigation/components/Sidebar'
-import { ThemeToggle } from '@/features/theme/components/ThemeToggle'
 import { useAppStore } from '@/store'
 import { cn } from '@/shared/utils/cn'
 
@@ -30,9 +29,37 @@ function RootLayout() {
       >
         {/* Top header */}
         <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-          <MobileMenuButton />
-          <div className="flex-1" />
-          <ThemeToggle />
+          {/* Left: App Name */}
+          <div className="flex items-center gap-2">
+            <MobileMenuButton />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+              DataFusion Plan Visualizer
+            </h1>
+          </div>
+          
+          {/* Right: Info Links */}
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <span>
+              Powered by{' '}
+              <a 
+                href="https://www.npmjs.com/package/plan-viz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
+              >
+                plan-viz
+              </a>
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <a 
+              href="https://github.com/NGA-TRAN/plan-visualizer" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
+            >
+              Report bugs
+            </a>
+          </div>
         </header>
 
         {/* Page content */}

@@ -5,15 +5,15 @@ import { Button } from '@/shared/components'
 import { Play, FileText, AlertCircle } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 import type { PlanInputProps } from '../types'
-import { SAMPLE_PLAN } from '../types'
 
 export function PlanInput({
   value,
   onChange,
   onVisualize,
-  isLoading = false,
   error = null,
   onLoadSample,
+  onLoadSample1,
+  onLoadSample2,
 }: PlanInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl/Cmd + Enter to visualize
@@ -31,12 +31,36 @@ export function PlanInput({
           htmlFor="plan-input" 
           className="text-sm font-medium text-gray-700 dark:text-gray-300"
         >
-          DataFusion Execution Plan
+          Execution Plan
         </label>
-        {onLoadSample && (
+        {(onLoadSample1 || onLoadSample2) && (
+          <div className="flex items-center gap-2">
+            {onLoadSample1 && (
+              <button
+                type="button"
+                onClick={onLoadSample1}
+                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
+              >
+                <FileText className="w-3 h-3" />
+                Load Sample 1
+              </button>
+            )}
+            {onLoadSample2 && (
+              <button
+                type="button"
+                onClick={onLoadSample2}
+                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
+              >
+                <FileText className="w-3 h-3" />
+                Load Sample 2
+              </button>
+            )}
+          </div>
+        )}
+        {onLoadSample && !onLoadSample1 && !onLoadSample2 && (
           <button
             type="button"
-            onClick={() => onChange(SAMPLE_PLAN)}
+            onClick={onLoadSample}
             className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
           >
             <FileText className="w-3 h-3" />
@@ -46,7 +70,7 @@ export function PlanInput({
       </div>
 
       {/* Textarea */}
-      <div className="relative flex-1">
+      <div className="relative flex-1 overflow-auto">
         <textarea
           id="plan-input"
           value={value}
@@ -62,11 +86,13 @@ export function PlanInput({
             'transition-colors',
             // Prevent zoom on iOS when focusing input
             'text-base sm:text-sm',
+            // Horizontal scrollbar - no word wrap
+            'whitespace-pre overflow-x-auto overflow-y-auto',
             error
               ? 'border-red-300 dark:border-red-700'
               : 'border-gray-200 dark:border-gray-700'
           )}
-          disabled={isLoading}
+          wrap="off"
         />
         
         {/* Character count */}
@@ -92,8 +118,7 @@ export function PlanInput({
         </p>
         <Button
           onClick={onVisualize}
-          isLoading={isLoading}
-          disabled={isLoading}
+          isLoading={false}
           className="gap-2 w-full sm:w-auto"
         >
           <Play className="w-4 h-4" />

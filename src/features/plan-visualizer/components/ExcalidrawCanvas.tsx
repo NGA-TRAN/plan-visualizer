@@ -12,6 +12,8 @@ import type { ExcalidrawCanvasProps } from '../types'
 // Type for Excalidraw API - using any to avoid import issues
 type ExcalidrawAPI = {
   updateScene: (sceneData: { elements?: any[]; appState?: any; files?: any }) => void
+  scrollToContent: (elements: any[], appState?: any) => void
+  getAppState: () => any
 }
 
 // Error Boundary for catching Excalidraw render failures
@@ -110,22 +112,28 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
     ? `scene-${elements.length}-${JSON.stringify(elements[0]?.id || '')}`
     : 'empty'
 
-  // Update scene when propScene changes
+  // Update scene when propScene changes and center the view
   useEffect(() => {
     if (scene && excalidrawAPIRef.current && elements && elements.length > 0) {
       // Use the scene as returned by plan-viz conversion,
-      // only adjusting the background color to match the app theme.
+      // preserving scrollX/scrollY for centering and adjusting the background color to match the app theme.
       const mergedScene = {
         elements: (scene as any).elements || [],
         appState: {
           ...(scene as any)?.appState,
           viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+          // Preserve scrollX and scrollY for centering
+          scrollX: (scene as any)?.appState?.scrollX ?? 0,
+          scrollY: (scene as any)?.appState?.scrollY ?? 0,
+          // Collapse sidebar by default
+          sidebarOpen: false,
         },
         files: (scene as any).files || {},
       }
       
       // Update the scene using the API
       excalidrawAPIRef.current.updateScene(mergedScene)
+      
     }
   }, [scene, theme, elements])
 
@@ -143,12 +151,17 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
   }
 
   // Use the scene as returned by plan-viz conversion,
-  // only adjusting the background color to match the app theme.
+  // preserving scrollX/scrollY for centering and adjusting the background color to match the app theme.
   const mergedScene = {
     ...(scene as any),
     appState: {
       ...(scene as any)?.appState,
       viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+      // Preserve scrollX and scrollY for centering
+      scrollX: (scene as any)?.appState?.scrollX ?? 0,
+      scrollY: (scene as any)?.appState?.scrollY ?? 0,
+      // Collapse sidebar by default
+      sidebarOpen: false,
     },
   }
 
@@ -172,6 +185,11 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
                   appState: {
                     ...(scene as any)?.appState,
                     viewBackgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+                    // Preserve scrollX and scrollY for centering
+                    scrollX: (scene as any)?.appState?.scrollX ?? 0,
+                    scrollY: (scene as any)?.appState?.scrollY ?? 0,
+                    // Collapse sidebar by default
+                    sidebarOpen: false,
                   },
                   files: (scene as any).files || {},
                 }
