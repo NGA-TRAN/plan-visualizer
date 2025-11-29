@@ -37,6 +37,15 @@ New to query plans? See plan-viz's [Output Analysis](https://github.com/NGA-TRAN
 
 This project was developed using **[SpecKit](https://github.com/DINHDUY/spec-driven-ai-dev/blob/master/docs/AI-assisted%20Development%20with%20SpecKit.md)**, a specification-driven development framework that enables AI-assisted development through structured specifications and automated planning.
 
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started, including:
+
+- How to fork the repository
+- Development setup and workflow
+- Testing your changes locally
+- Submitting pull requests
+
 ## License
 
 Licensed under the [MIT License](LICENSE).
