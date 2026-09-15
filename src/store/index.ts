@@ -82,6 +82,7 @@ export const useAppStore = create<AppStore>()(
       // Initial state (empty, populated by initializeStore)
       navigationItems: [],
       sidebarCollapsed: getInitialSidebarCollapsed(),
+      mobileNavOpen: false,
       notifications: [],
       theme: { mode: 'system', resolved: 'light' },
 
@@ -104,6 +105,18 @@ export const useAppStore = create<AppStore>()(
           false,
           'toggleSidebar'
         )
+      },
+
+      toggleMobileNav: () => {
+        set(
+          (state) => ({ mobileNavOpen: !state.mobileNavOpen }),
+          false,
+          'toggleMobileNav'
+        )
+      },
+
+      closeMobileNav: () => {
+        set({ mobileNavOpen: false }, false, 'closeMobileNav')
       },
 
       // =======================================================================
@@ -195,6 +208,7 @@ export const useAppStore = create<AppStore>()(
             navigationItems: seedData.navigationItems,
             theme,
             sidebarCollapsed,
+            mobileNavOpen: false,
           },
           false,
           'initializeStore'

@@ -27,14 +27,16 @@ export interface NavItemProps {
   item: NavigationItem
   isActive?: boolean
   collapsed?: boolean
+  onNavigate?: () => void
 }
 
-export function NavItem({ item, isActive, collapsed }: NavItemProps) {
+export function NavItem({ item, isActive, collapsed, onNavigate }: NavItemProps) {
   if (!item.route) return null
 
   return (
     <Link
       to={item.route}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
         'hover:bg-gray-100 dark:hover:bg-gray-800',
