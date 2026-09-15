@@ -11,9 +11,9 @@ export function PlanInput({
   onChange,
   onVisualize,
   error = null,
-  onLoadSample,
-  onLoadSample1,
-  onLoadSample2,
+  samples = [],
+  selectedSampleId = null,
+  onSelectSample,
 }: PlanInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl/Cmd + Enter to visualize
@@ -33,39 +33,42 @@ export function PlanInput({
         >
           Execution Plan
         </label>
-        {(onLoadSample1 || onLoadSample2) && (
-          <div className="flex items-center gap-2">
-            {onLoadSample1 && (
-              <button
-                type="button"
-                onClick={onLoadSample1}
-                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
-              >
-                <FileText className="w-3 h-3" />
-                Load Sample 1
-              </button>
-            )}
-            {onLoadSample2 && (
-              <button
-                type="button"
-                onClick={onLoadSample2}
-                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
-              >
-                <FileText className="w-3 h-3" />
-                Load Sample 2
-              </button>
-            )}
-          </div>
-        )}
-        {onLoadSample && !onLoadSample1 && !onLoadSample2 && (
-          <button
-            type="button"
-            onClick={onLoadSample}
-            className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
-          >
-            <FileText className="w-3 h-3" />
-            Load Sample
-          </button>
+        {samples.length > 0 && onSelectSample && (
+          <label className="flex items-center gap-1.5 min-w-0">
+            <FileText className="w-3 h-3 text-primary-600 dark:text-primary-400 flex-shrink-0" />
+            <span className="sr-only">Load a sample</span>
+            <select
+              id="sample-plan"
+              value={selectedSampleId ?? ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  onSelectSample(e.target.value)
+                }
+              }}
+              className={cn(
+                'max-w-[220px] sm:max-w-[280px] truncate text-xs',
+                'bg-transparent border-0 p-0 pr-6',
+                'text-primary-600 dark:text-primary-400',
+                'focus:outline-none focus:ring-2 focus:ring-primary-500 rounded',
+                'cursor-pointer'
+              )}
+            >
+              <option value="" disabled>
+                Load a sample…
+              </option>
+              {Array.from(new Set(samples.map((sample) => sample.group))).map((group) => (
+                <optgroup key={group} label={group}>
+                  {samples
+                    .filter((sample) => sample.group === group)
+                    .map((sample) => (
+                      <option key={sample.id} value={sample.id}>
+                        {sample.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
         )}
       </div>
 
