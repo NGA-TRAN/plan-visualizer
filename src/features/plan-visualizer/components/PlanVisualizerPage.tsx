@@ -9,13 +9,14 @@ import { PlanInput } from './PlanInput'
 import { ExcalidrawCanvas } from './ExcalidrawCanvas'
 import { usePlanConverter } from '../hooks/usePlanConverter'
 import { useResizablePanels } from '../hooks/useResizablePanels'
-import { SAMPLE_PLAN, SAMPLE_PLAN_2 } from '../types'
+import { SAMPLE_PLANS, getSamplePlan } from '../data/samples'
 import { savePlanToStorage } from '@/features/offline/services/storageManager'
 import { cn } from '@/shared/utils/cn'
 
 export function PlanVisualizerPage() {
   // State
   const [inputText, setInputText] = useState('')
+  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null)
   // Subscribe to theme changes from store - this ensures Excalidraw updates when theme toggle is clicked
   // The theme prop is passed to ExcalidrawCanvas which passes it to Excalidraw component
   const theme = useAppStore((state) => state.theme.resolved)
@@ -51,19 +52,16 @@ export function PlanVisualizerPage() {
     }
   }, [inputText, convert, notify, displayScene])
 
-  // Handle loading sample plan (backward compatibility)
-  const handleLoadSample = useCallback(() => {
-    setInputText(SAMPLE_PLAN)
+  const handleInputChange = useCallback((value: string) => {
+    setInputText(value)
+    setSelectedSampleId(null)
   }, [])
 
-  // Handle loading sample plan 1
-  const handleLoadSample1 = useCallback(() => {
-    setInputText(SAMPLE_PLAN)
-  }, [])
-
-  // Handle loading sample plan 2
-  const handleLoadSample2 = useCallback(() => {
-    setInputText(SAMPLE_PLAN_2)
+  const handleSelectSample = useCallback((id: string) => {
+    const sample = getSamplePlan(id)
+    if (!sample) return
+    setSelectedSampleId(id)
+    setInputText(sample.plan)
   }, [])
 
   // Resizable panels hook
@@ -85,12 +83,12 @@ export function PlanVisualizerPage() {
           <Card className="p-3 sm:p-4 h-full">
             <PlanInput
               value={inputText}
-              onChange={setInputText}
+              onChange={handleInputChange}
               onVisualize={handleVisualize}
               error={state.status === 'error' ? state.errorMessage : null}
-              onLoadSample={handleLoadSample}
-              onLoadSample1={handleLoadSample1}
-              onLoadSample2={handleLoadSample2}
+              samples={SAMPLE_PLANS}
+              selectedSampleId={selectedSampleId}
+              onSelectSample={handleSelectSample}
             />
           </Card>
         </div>
