@@ -102,6 +102,10 @@ export interface AppStore {
   navigationItems: NavigationItem[]
   sidebarCollapsed: boolean
   toggleSidebar: () => void
+  /** Mobile drawer visibility. Session-only; not persisted. */
+  mobileNavOpen: boolean
+  toggleMobileNav: () => void
+  closeMobileNav: () => void
 
   // Notifications
   notifications: Notification[]

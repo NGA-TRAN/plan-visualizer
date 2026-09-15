@@ -12,36 +12,40 @@ export function Sidebar() {
   const {
     navigationItems,
     sidebarCollapsed,
+    mobileNavOpen,
     toggleSidebar,
+    closeMobileNav,
     isActiveRoute,
   } = useNavigation()
 
+  const showExpandedContent = mobileNavOpen || !sidebarCollapsed
+
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay — only when the drawer is open this session */}
       <div
         className={cn(
           'fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity',
-          !sidebarCollapsed ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          mobileNavOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
-        onClick={toggleSidebar}
+        onClick={closeMobileNav}
         aria-hidden="true"
       />
 
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300',
-          // Desktop: collapsed = narrow, expanded = wide
+          'fixed top-0 left-0 z-50 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300',
+          // Desktop: always visible; collapsed = narrow, expanded = wide
           'lg:translate-x-0',
           sidebarCollapsed ? 'lg:w-16' : 'lg:w-64',
-          // Mobile: slide in/out (collapsed means hidden on mobile)
-          sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0 w-64'
+          // Mobile: hidden until the hamburger opens the drawer
+          mobileNavOpen ? 'translate-x-0 w-64' : '-translate-x-full'
         )}
       >
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
-          {!sidebarCollapsed && (
+          {showExpandedContent && (
             <img 
               src={`${import.meta.env.BASE_URL}icons/icon-192x192.png`}
               alt="Plan Visualizer" 
@@ -52,15 +56,23 @@ export function Sidebar() {
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className={cn(sidebarCollapsed && 'mx-auto')}
+            className={cn('hidden lg:inline-flex', sidebarCollapsed && 'mx-auto')}
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {sidebarCollapsed ? (
               <PanelLeft className="h-5 w-5" />
             ) : (
-              <PanelLeftClose className="h-5 w-5 hidden lg:block" />
+              <PanelLeftClose className="h-5 w-5" />
             )}
-            <X className="h-5 w-5 lg:hidden" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={closeMobileNav}
+            className="lg:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
@@ -73,7 +85,7 @@ export function Sidebar() {
                   key={item.id}
                   item={item}
                   isActiveRoute={isActiveRoute}
-                  collapsed={sidebarCollapsed}
+                  collapsed={!showExpandedContent}
                 />
               )
             }
@@ -82,7 +94,8 @@ export function Sidebar() {
                 key={item.id}
                 item={item}
                 isActive={isActiveRoute(item.route)}
-                collapsed={sidebarCollapsed}
+                collapsed={!showExpandedContent}
+                onNavigate={closeMobileNav}
               />
             )
           })}
@@ -94,13 +107,13 @@ export function Sidebar() {
 
 // Mobile menu button (for use in header)
 export function MobileMenuButton() {
-  const { toggleSidebar } = useNavigation()
+  const { toggleMobileNav } = useNavigation()
 
   return (
     <Button
       variant="ghost"
       size="sm"
-      onClick={toggleSidebar}
+      onClick={toggleMobileNav}
       className="lg:hidden"
       aria-label="Toggle menu"
     >
@@ -108,4 +121,3 @@ export function MobileMenuButton() {
     </Button>
   )
 }
-

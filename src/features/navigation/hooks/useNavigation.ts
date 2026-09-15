@@ -8,7 +8,10 @@ export function useNavigation() {
   const location = useLocation()
   const navigationItems = useNavigationItems()
   const sidebarCollapsed = useSidebarCollapsed()
+  const mobileNavOpen = useAppStore((state) => state.mobileNavOpen)
   const toggleSidebar = useAppStore((state) => state.toggleSidebar)
+  const toggleMobileNav = useAppStore((state) => state.toggleMobileNav)
+  const closeMobileNav = useAppStore((state) => state.closeMobileNav)
 
   // Check if a route is active
   const isActiveRoute = (route?: string) => {
@@ -25,7 +28,10 @@ export function useNavigation() {
   return {
     navigationItems,
     sidebarCollapsed,
+    mobileNavOpen,
     toggleSidebar,
+    toggleMobileNav,
+    closeMobileNav,
     isActiveRoute,
     hasActiveChild,
     currentPath: location.pathname,
