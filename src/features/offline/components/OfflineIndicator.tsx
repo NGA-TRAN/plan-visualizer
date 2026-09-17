@@ -1,14 +1,14 @@
 // OfflineIndicator Component
 // Displays connectivity status to users
 
-import { useOffline } from '../hooks/useOffline'
-import { WifiOff } from 'lucide-react'
+import { useOffline } from "../hooks/useOffline";
+import { WifiOff } from "lucide-react";
 
 export function OfflineIndicator() {
-  const { isOffline } = useOffline()
+  const { isOffline } = useOffline();
 
   if (!isOffline) {
-    return null
+    return null;
   }
 
   return (
@@ -16,6 +16,5 @@ export function OfflineIndicator() {
       <WifiOff className="w-4 h-4" />
       <span>You are currently offline. Some features may be limited.</span>
     </div>
-  )
+  );
 }
-

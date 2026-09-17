@@ -1,7 +1,7 @@
 // Navigation Items Generator
 // Generates navigation items for the sidebar
 
-import type { NavigationItem } from '@/types'
+import type { NavigationItem } from "@/types";
 
 // =============================================================================
 // Navigation Items
@@ -10,12 +10,12 @@ import type { NavigationItem } from '@/types'
 export function generateNavigationItems(): NavigationItem[] {
   return [
     {
-      id: 'nav-plan-visualizer',
-      label: 'Plan Visualizer',
-      icon: 'workflow',
-      route: '/',
+      id: "nav-plan-visualizer",
+      label: "Plan Visualizer",
+      icon: "workflow",
+      route: "/",
     },
-  ]
+  ];
 }
 
 // =============================================================================
@@ -23,14 +23,13 @@ export function generateNavigationItems(): NavigationItem[] {
 // =============================================================================
 
 export interface SeedData {
-  navigationItems: NavigationItem[]
+  navigationItems: NavigationItem[];
 }
 
 export function generateSeedData(): SeedData {
-  const navigationItems = generateNavigationItems()
+  const navigationItems = generateNavigationItems();
 
   return {
     navigationItems,
-  }
+  };
 }
-

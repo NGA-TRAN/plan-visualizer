@@ -53,7 +53,9 @@
 
 /* Smooth theme transition */
 html {
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
 }
 
 /* Focus visible styles for accessibility */
@@ -85,4 +87,3 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--color-muted-foreground) / 0.5);
 }
-

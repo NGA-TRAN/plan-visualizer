@@ -1,20 +1,27 @@
 // Route Definitions with Lazy Loading
 // Implements code splitting for optimal bundle size
 
-import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Outlet } from 'react-router-dom'
-import { LoadingSpinner } from '@/shared/components'
-import { Sidebar, MobileMenuButton } from '@/features/navigation/components/Sidebar'
-import { ThemeToggle } from '@/features/theme/components/ThemeToggle'
-import { useAppStore } from '@/store'
-import { cn } from '@/shared/utils/cn'
+import { lazy, Suspense } from "react";
+import { createBrowserRouter, Outlet } from "react-router-dom";
+import { LoadingSpinner } from "@/shared/components";
+import {
+  Sidebar,
+  MobileMenuButton,
+} from "@/features/navigation/components/Sidebar";
+import { ThemeToggle } from "@/features/theme/components/ThemeToggle";
+import { useAppStore } from "@/store";
+import { cn } from "@/shared/utils/cn";
 
 // Lazy load pages for code splitting
-const PlanVisualizerPage = lazy(() => import('@/features/plan-visualizer/components/PlanVisualizerPage').then(m => ({ default: m.PlanVisualizerPage })))
+const PlanVisualizerPage = lazy(() =>
+  import("@/features/plan-visualizer/components/PlanVisualizerPage").then(
+    (m) => ({ default: m.PlanVisualizerPage }),
+  ),
+);
 
 // Layout component with Sidebar
 function RootLayout() {
-  const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed)
+  const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -24,8 +31,8 @@ function RootLayout() {
       {/* Main content area */}
       <div
         className={cn(
-          'transition-all duration-300',
-          sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+          "transition-all duration-300",
+          sidebarCollapsed ? "lg:ml-16" : "lg:ml-64",
         )}
       >
         {/* Top header */}
@@ -37,15 +44,15 @@ function RootLayout() {
               DataFusion Plan Visualizer
             </h1>
           </div>
-          
+
           {/* Right: Theme Toggle and Info Links */}
           <div className="flex items-center gap-3">
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               <span>
-                Powered by{' '}
-                <a 
-                  href="https://www.npmjs.com/package/plan-viz" 
-                  target="_blank" 
+                Powered by{" "}
+                <a
+                  href="https://www.npmjs.com/package/plan-viz"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
                 >
@@ -53,13 +60,14 @@ function RootLayout() {
                 </a>
               </span>
               <span className="hidden sm:inline">•</span>
-              <a 
-                href="https://github.com/NGA-TRAN/plan-visualizer" 
-                target="_blank" 
+              <a
+                href="https://github.com/NGA-TRAN/plan-visualizer/issues/new"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
+                title="Report a bug or request a feature"
+                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline whitespace-nowrap"
               >
-                Report bugs
+                Bugs & features
               </a>
             </div>
             <ThemeToggle />
@@ -80,31 +88,34 @@ function RootLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }
 
 // Base path for GitHub Pages (repository name)
-const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <RootLayout />,
+      children: [
+        {
+          index: true,
+          element: <PlanVisualizerPage />,
+        },
+        {
+          path: "settings/*",
+          element: (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              Settings page coming soon...
+            </div>
+          ),
+        },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <RootLayout />,
-    children: [
-      {
-        index: true,
-        element: <PlanVisualizerPage />,
-      },
-      {
-        path: 'settings/*',
-        element: (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            Settings page coming soon...
-          </div>
-        ),
-      },
-    ],
+    basename,
   },
-], {
-  basename,
-})
+);

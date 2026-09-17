@@ -8,8 +8,8 @@
 
 /* Tailwind v4 theme configuration */
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  
+  --font-sans: "Inter", system-ui, sans-serif;
+
   /* Primary colors */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
@@ -76,27 +76,27 @@
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
-  
+
   .btn-primary {
     @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600;
   }
-  
+
   .btn-danger {
     @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
   }
-  
+
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
   }
-  
+
   .input {
     @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
-  
+
   .label {
     @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
   }
@@ -106,23 +106,23 @@
     /* Ensure container has proper constraints */
     position: relative;
   }
-  
+
   .planviz-excalidraw .excalidraw {
     font-size: 0.875rem; /* 14px instead of 16px */
     height: 100%;
     width: 100%;
   }
-  
+
   /* Constrain toolbar and UI elements */
   .planviz-excalidraw .excalidraw .ToolIcon__icon {
     width: 1.5rem !important;
     height: 1.5rem !important;
   }
-  
+
   .planviz-excalidraw .excalidraw .Toolbar {
     padding: 0.25rem !important;
   }
-  
+
   .planviz-excalidraw .excalidraw .Toolbar button {
     padding: 0.375rem !important;
     min-width: auto !important;

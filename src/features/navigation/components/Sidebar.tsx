@@ -1,12 +1,12 @@
 // Sidebar Component
 // Collapsible navigation sidebar
 
-import { Menu, X, PanelLeftClose, PanelLeft } from 'lucide-react'
-import { cn } from '@/shared/utils/cn'
-import { Button } from '@/shared/components'
-import { NavGroup } from './NavGroup'
-import { NavItem } from './NavItem'
-import { useNavigation } from '../hooks/useNavigation'
+import { Menu, X, PanelLeftClose, PanelLeft } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
+import { Button } from "@/shared/components";
+import { NavGroup } from "./NavGroup";
+import { NavItem } from "./NavItem";
+import { useNavigation } from "../hooks/useNavigation";
 
 export function Sidebar() {
   const {
@@ -16,17 +16,17 @@ export function Sidebar() {
     toggleSidebar,
     closeMobileNav,
     isActiveRoute,
-  } = useNavigation()
+  } = useNavigation();
 
-  const showExpandedContent = mobileNavOpen || !sidebarCollapsed
+  const showExpandedContent = mobileNavOpen || !sidebarCollapsed;
 
   return (
     <>
       {/* Mobile overlay — only when the drawer is open this session */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity',
-          mobileNavOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          "fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity",
+          mobileNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={closeMobileNav}
         aria-hidden="true"
@@ -35,20 +35,20 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300',
+          "fixed top-0 left-0 z-50 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300",
           // Desktop: always visible; collapsed = narrow, expanded = wide
-          'lg:translate-x-0',
-          sidebarCollapsed ? 'lg:w-16' : 'lg:w-64',
+          "lg:translate-x-0",
+          sidebarCollapsed ? "lg:w-16" : "lg:w-64",
           // Mobile: hidden until the hamburger opens the drawer
-          mobileNavOpen ? 'translate-x-0 w-64' : '-translate-x-full'
+          mobileNavOpen ? "translate-x-0 w-64" : "-translate-x-full",
         )}
       >
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
           {showExpandedContent && (
-            <img 
+            <img
               src={`${import.meta.env.BASE_URL}icons/icon-192x192.png`}
-              alt="Plan Visualizer" 
+              alt="Plan Visualizer"
               className="h-16 w-16"
             />
           )}
@@ -56,8 +56,13 @@ export function Sidebar() {
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className={cn('hidden lg:inline-flex', sidebarCollapsed && 'mx-auto')}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn(
+              "hidden lg:inline-flex",
+              sidebarCollapsed && "mx-auto",
+            )}
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
           >
             {sidebarCollapsed ? (
               <PanelLeft className="h-5 w-5" />
@@ -87,7 +92,7 @@ export function Sidebar() {
                   isActiveRoute={isActiveRoute}
                   collapsed={!showExpandedContent}
                 />
-              )
+              );
             }
             return (
               <NavItem
@@ -97,17 +102,17 @@ export function Sidebar() {
                 collapsed={!showExpandedContent}
                 onNavigate={closeMobileNav}
               />
-            )
+            );
           })}
         </nav>
       </aside>
     </>
-  )
+  );
 }
 
 // Mobile menu button (for use in header)
 export function MobileMenuButton() {
-  const { toggleMobileNav } = useNavigation()
+  const { toggleMobileNav } = useNavigation();
 
   return (
     <Button
@@ -119,5 +124,5 @@ export function MobileMenuButton() {
     >
       <Menu className="h-5 w-5" />
     </Button>
-  )
+  );
 }

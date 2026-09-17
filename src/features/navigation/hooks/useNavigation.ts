@@ -1,29 +1,29 @@
 // Navigation Hook
 // Provides navigation state and actions
 
-import { useAppStore, useNavigationItems, useSidebarCollapsed } from '@/store'
-import { useLocation } from 'react-router-dom'
+import { useAppStore, useNavigationItems, useSidebarCollapsed } from "@/store";
+import { useLocation } from "react-router-dom";
 
 export function useNavigation() {
-  const location = useLocation()
-  const navigationItems = useNavigationItems()
-  const sidebarCollapsed = useSidebarCollapsed()
-  const mobileNavOpen = useAppStore((state) => state.mobileNavOpen)
-  const toggleSidebar = useAppStore((state) => state.toggleSidebar)
-  const toggleMobileNav = useAppStore((state) => state.toggleMobileNav)
-  const closeMobileNav = useAppStore((state) => state.closeMobileNav)
+  const location = useLocation();
+  const navigationItems = useNavigationItems();
+  const sidebarCollapsed = useSidebarCollapsed();
+  const mobileNavOpen = useAppStore((state) => state.mobileNavOpen);
+  const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+  const toggleMobileNav = useAppStore((state) => state.toggleMobileNav);
+  const closeMobileNav = useAppStore((state) => state.closeMobileNav);
 
   // Check if a route is active
   const isActiveRoute = (route?: string) => {
-    if (!route) return false
-    return location.pathname === route
-  }
+    if (!route) return false;
+    return location.pathname === route;
+  };
 
   // Check if any child route is active
   const hasActiveChild = (item: { children?: Array<{ route?: string }> }) => {
-    if (!item.children) return false
-    return item.children.some((child) => isActiveRoute(child.route))
-  }
+    if (!item.children) return false;
+    return item.children.some((child) => isActiveRoute(child.route));
+  };
 
   return {
     navigationItems,
@@ -35,6 +35,5 @@ export function useNavigation() {
     isActiveRoute,
     hasActiveChild,
     currentPath: location.pathname,
-  }
+  };
 }
-

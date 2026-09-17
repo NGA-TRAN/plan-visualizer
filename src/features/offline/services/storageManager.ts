@@ -1,12 +1,12 @@
 // Storage Manager Service
 // Handles IndexedDB operations for plan data persistence
 
-import { openDB, type IDBPDatabase } from 'idb'
-import type { PlanData } from '../types'
+import { openDB, type IDBPDatabase } from "idb";
+import type { PlanData } from "../types";
 
-const DB_NAME = 'planVisualizerDB'
-const DB_VERSION = 1
-const STORE_NAME = 'plans'
+const DB_NAME = "planVisualizerDB";
+const DB_VERSION = 1;
+const STORE_NAME = "plans";
 
 /**
  * Initialize IndexedDB database with schema
@@ -17,23 +17,23 @@ async function initDatabase(): Promise<IDBPDatabase> {
       // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, {
-          keyPath: 'id',
+          keyPath: "id",
           autoIncrement: false,
-        })
-        
+        });
+
         // Create indexes for sorting
-        store.createIndex('createdAt', 'createdAt', { unique: false })
-        store.createIndex('updatedAt', 'updatedAt', { unique: false })
+        store.createIndex("createdAt", "createdAt", { unique: false });
+        store.createIndex("updatedAt", "updatedAt", { unique: false });
       }
     },
-  })
+  });
 }
 
 /**
  * Generate a unique ID for plan entries
  */
 function generateId(): string {
-  return `plan-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+  return `plan-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**
@@ -41,40 +41,42 @@ function generateId(): string {
  */
 export async function savePlanToStorage(
   planText: string,
-  visualizationData: any
+  visualizationData: any,
 ): Promise<string> {
   try {
-    const db = await initDatabase()
-    const id = generateId()
-    const now = new Date()
-    
+    const db = await initDatabase();
+    const id = generateId();
+    const now = new Date();
+
     const planData: PlanData = {
       id,
       planText,
       visualizationData,
       createdAt: now,
       updatedAt: now,
-    }
-    
-    await db.put(STORE_NAME, planData)
-    return id
+    };
+
+    await db.put(STORE_NAME, planData);
+    return id;
   } catch (error) {
-    console.error('Failed to save plan to storage:', error)
-    throw new Error('Failed to save plan data locally')
+    console.error("Failed to save plan to storage:", error);
+    throw new Error("Failed to save plan data locally");
   }
 }
 
 /**
  * Load plan data from IndexedDB by ID
  */
-export async function loadPlanFromStorage(id: string): Promise<PlanData | null> {
+export async function loadPlanFromStorage(
+  id: string,
+): Promise<PlanData | null> {
   try {
-    const db = await initDatabase()
-    const planData = await db.get(STORE_NAME, id)
-    return planData || null
+    const db = await initDatabase();
+    const planData = await db.get(STORE_NAME, id);
+    return planData || null;
   } catch (error) {
-    console.error('Failed to load plan from storage:', error)
-    return null
+    console.error("Failed to load plan from storage:", error);
+    return null;
   }
 }
 
@@ -83,31 +85,31 @@ export async function loadPlanFromStorage(id: string): Promise<PlanData | null> 
  */
 export async function listPlansFromStorage(
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<PlanData[]> {
   try {
-    const db = await initDatabase()
-    const tx = db.transaction(STORE_NAME, 'readonly')
-    const store = tx.store
-    const index = store.index('createdAt')
-    
-    const plans: PlanData[] = []
-    let cursor = await index.openCursor(null, 'prev') // Sort descending (newest first)
-    let skipped = 0
-    
+    const db = await initDatabase();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.store;
+    const index = store.index("createdAt");
+
+    const plans: PlanData[] = [];
+    let cursor = await index.openCursor(null, "prev"); // Sort descending (newest first)
+    let skipped = 0;
+
     while (cursor && plans.length < limit) {
       if (skipped >= offset) {
-        plans.push(cursor.value)
+        plans.push(cursor.value);
       } else {
-        skipped++
+        skipped++;
       }
-      cursor = await cursor.continue()
+      cursor = await cursor.continue();
     }
-    
-    return plans
+
+    return plans;
   } catch (error) {
-    console.error('Failed to list plans from storage:', error)
-    return []
+    console.error("Failed to list plans from storage:", error);
+    return [];
   }
 }
 
@@ -116,12 +118,12 @@ export async function listPlansFromStorage(
  */
 export async function deletePlanFromStorage(id: string): Promise<boolean> {
   try {
-    const db = await initDatabase()
-    await db.delete(STORE_NAME, id)
-    return true
+    const db = await initDatabase();
+    await db.delete(STORE_NAME, id);
+    return true;
   } catch (error) {
-    console.error('Failed to delete plan from storage:', error)
-    return false
+    console.error("Failed to delete plan from storage:", error);
+    return false;
   }
 }
 
@@ -130,12 +132,11 @@ export async function deletePlanFromStorage(id: string): Promise<boolean> {
  */
 export async function clearAllPlansFromStorage(): Promise<boolean> {
   try {
-    const db = await initDatabase()
-    await db.clear(STORE_NAME)
-    return true
+    const db = await initDatabase();
+    await db.clear(STORE_NAME);
+    return true;
   } catch (error) {
-    console.error('Failed to clear plans from storage:', error)
-    return false
+    console.error("Failed to clear plans from storage:", error);
+    return false;
   }
 }
-
