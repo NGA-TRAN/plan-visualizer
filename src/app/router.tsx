@@ -61,12 +61,13 @@ function RootLayout() {
               </span>
               <span className="hidden sm:inline">•</span>
               <a
-                href="https://github.com/NGA-TRAN/plan-visualizer"
+                href="https://github.com/NGA-TRAN/plan-visualizer/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
+                title="Report a bug or request a feature"
+                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline whitespace-nowrap"
               >
-                Report bugs
+                Bugs & features
               </a>
             </div>
             <ThemeToggle />
