@@ -1,67 +1,71 @@
 // Centralized Zustand Store
 // Single source of truth for: navigation, notifications, theme
 
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   AppStore,
   Notification,
   ThemeMode,
   ThemePreference,
-} from '@/types'
-import { generateSeedData } from '@/data/seed'
+} from "@/types";
+import { generateSeedData } from "@/data/seed";
 
 // =============================================================================
 // Theme Helpers
 // =============================================================================
 
-function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+function getSystemTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 }
 
 function getInitialTheme(): ThemePreference {
-  if (typeof window === 'undefined') {
-    return { mode: 'system', resolved: 'light' }
+  if (typeof window === "undefined") {
+    return { mode: "system", resolved: "light" };
   }
-  
-  const stored = localStorage.getItem('plan-visualizer-theme') as ThemeMode | null
-  const mode = stored || 'system'
-  const resolved = mode === 'system' ? getSystemTheme() : mode
-  
-  return { mode, resolved }
+
+  const stored = localStorage.getItem(
+    "plan-visualizer-theme",
+  ) as ThemeMode | null;
+  const mode = stored || "system";
+  const resolved = mode === "system" ? getSystemTheme() : mode;
+
+  return { mode, resolved };
 }
 
 function getInitialSidebarCollapsed(): boolean {
-  if (typeof window === 'undefined') {
-    return false
+  if (typeof window === "undefined") {
+    return false;
   }
-  
-  const stored = localStorage.getItem('plan-visualizer-sidebar-collapsed')
-  return stored === 'true'
+
+  const stored = localStorage.getItem("plan-visualizer-sidebar-collapsed");
+  return stored === "true";
 }
 
-function applyTheme(resolved: 'light' | 'dark') {
-  if (typeof document === 'undefined' || !document.documentElement) {
-    return
+function applyTheme(resolved: "light" | "dark") {
+  if (typeof document === "undefined" || !document.documentElement) {
+    return;
   }
-  
-  const htmlElement = document.documentElement
-  
+
+  const htmlElement = document.documentElement;
+
   // Apply theme class - Tailwind will respond to this
   // Force synchronous update to ensure Tailwind dark: classes respond
-  if (resolved === 'dark') {
-    htmlElement.classList.add('dark')
+  if (resolved === "dark") {
+    htmlElement.classList.add("dark");
     // Force a reflow to ensure styles are recalculated
-    void htmlElement.offsetHeight
+    void htmlElement.offsetHeight;
   } else {
-    htmlElement.classList.remove('dark')
+    htmlElement.classList.remove("dark");
     // Force a reflow to ensure styles are recalculated
-    void htmlElement.offsetHeight
+    void htmlElement.offsetHeight;
   }
-  
+
   // Also set data attribute as backup (some CSS frameworks use this)
-  htmlElement.setAttribute('data-theme', resolved)
+  htmlElement.setAttribute("data-theme", resolved);
 }
 
 // =============================================================================
@@ -69,7 +73,7 @@ function applyTheme(resolved: 'light' | 'dark') {
 // =============================================================================
 
 function generateId(): string {
-  return Math.random().toString(36).substring(2, 11)
+  return Math.random().toString(36).substring(2, 11);
 }
 
 // =============================================================================
@@ -84,7 +88,7 @@ export const useAppStore = create<AppStore>()(
       sidebarCollapsed: getInitialSidebarCollapsed(),
       mobileNavOpen: false,
       notifications: [],
-      theme: { mode: 'system', resolved: 'light' },
+      theme: { mode: "system", resolved: "light" },
 
       // =======================================================================
       // Navigation Actions
@@ -93,30 +97,33 @@ export const useAppStore = create<AppStore>()(
       toggleSidebar: () => {
         set(
           (state) => {
-            const newCollapsed = !state.sidebarCollapsed
+            const newCollapsed = !state.sidebarCollapsed;
             // Persist to localStorage
-            if (typeof localStorage !== 'undefined') {
-              localStorage.setItem('plan-visualizer-sidebar-collapsed', String(newCollapsed))
+            if (typeof localStorage !== "undefined") {
+              localStorage.setItem(
+                "plan-visualizer-sidebar-collapsed",
+                String(newCollapsed),
+              );
             }
             return {
               sidebarCollapsed: newCollapsed,
-            }
+            };
           },
           false,
-          'toggleSidebar'
-        )
+          "toggleSidebar",
+        );
       },
 
       toggleMobileNav: () => {
         set(
           (state) => ({ mobileNavOpen: !state.mobileNavOpen }),
           false,
-          'toggleMobileNav'
-        )
+          "toggleMobileNav",
+        );
       },
 
       closeMobileNav: () => {
-        set({ mobileNavOpen: false }, false, 'closeMobileNav')
+        set({ mobileNavOpen: false }, false, "closeMobileNav");
       },
 
       // =======================================================================
@@ -128,21 +135,21 @@ export const useAppStore = create<AppStore>()(
           ...notificationData,
           id: generateId(),
           createdAt: Date.now(),
-        }
-        
+        };
+
         set(
           (state) => ({
             notifications: [...state.notifications, newNotification].slice(-5), // Keep last 5
           }),
           false,
-          'addNotification'
-        )
-        
+          "addNotification",
+        );
+
         // Auto-dismiss after duration
         if (notificationData.duration > 0) {
           setTimeout(() => {
-            get().dismissNotification(newNotification.id)
-          }, notificationData.duration)
+            get().dismissNotification(newNotification.id);
+          }, notificationData.duration);
         }
       },
 
@@ -152,8 +159,8 @@ export const useAppStore = create<AppStore>()(
             notifications: state.notifications.filter((n) => n.id !== id),
           }),
           false,
-          'dismissNotification'
-        )
+          "dismissNotification",
+        );
       },
 
       // =======================================================================
@@ -161,33 +168,29 @@ export const useAppStore = create<AppStore>()(
       // =======================================================================
 
       setThemeMode: (mode) => {
-        const resolved = mode === 'system' ? getSystemTheme() : mode
-        
+        const resolved = mode === "system" ? getSystemTheme() : mode;
+
         // Persist to localStorage
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('plan-visualizer-theme', mode)
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("plan-visualizer-theme", mode);
         }
-        
+
         // Apply to DOM immediately - this is critical for Tailwind dark mode
-        applyTheme(resolved)
-        
+        applyTheme(resolved);
+
         // Update store state
-        set(
-          { theme: { mode, resolved } },
-          false,
-          'setThemeMode'
-        )
-        
+        set({ theme: { mode, resolved } }, false, "setThemeMode");
+
         // Ensure theme is applied (in case DOM wasn't ready)
         // Use both immediate and deferred application to catch all cases
-        if (typeof requestAnimationFrame !== 'undefined') {
+        if (typeof requestAnimationFrame !== "undefined") {
           requestAnimationFrame(() => {
-            applyTheme(resolved)
-          })
+            applyTheme(resolved);
+          });
         } else {
           setTimeout(() => {
-            applyTheme(resolved)
-          }, 0)
+            applyTheme(resolved);
+          }, 0);
         }
       },
 
@@ -196,13 +199,13 @@ export const useAppStore = create<AppStore>()(
       // =======================================================================
 
       initializeStore: () => {
-        const seedData = generateSeedData()
-        const theme = getInitialTheme()
-        const sidebarCollapsed = getInitialSidebarCollapsed()
-        
+        const seedData = generateSeedData();
+        const theme = getInitialTheme();
+        const sidebarCollapsed = getInitialSidebarCollapsed();
+
         // Apply initial theme
-        applyTheme(theme.resolved)
-        
+        applyTheme(theme.resolved);
+
         set(
           {
             navigationItems: seedData.navigationItems,
@@ -211,20 +214,22 @@ export const useAppStore = create<AppStore>()(
             mobileNavOpen: false,
           },
           false,
-          'initializeStore'
-        )
+          "initializeStore",
+        );
       },
     }),
-    { name: 'plan-visualizer-store' }
-  )
-)
+    { name: "plan-visualizer-store" },
+  ),
+);
 
 // =============================================================================
 // Selector Hooks (for convenience)
 // =============================================================================
 
-export const useNavigationItems = () => useAppStore((state) => state.navigationItems)
-export const useSidebarCollapsed = () => useAppStore((state) => state.sidebarCollapsed)
-export const useNotifications = () => useAppStore((state) => state.notifications)
-export const useTheme = () => useAppStore((state) => state.theme)
-
+export const useNavigationItems = () =>
+  useAppStore((state) => state.navigationItems);
+export const useSidebarCollapsed = () =>
+  useAppStore((state) => state.sidebarCollapsed);
+export const useNotifications = () =>
+  useAppStore((state) => state.notifications);
+export const useTheme = () => useAppStore((state) => state.theme);

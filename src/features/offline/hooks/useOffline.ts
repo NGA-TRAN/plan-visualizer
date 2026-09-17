@@ -1,14 +1,14 @@
 // useOffline Hook
 // Detects network connectivity status using Navigator.onLine API and network events
 
-import { useState, useEffect } from 'react'
-import type { ConnectivityStatus } from '../types'
+import { useState, useEffect } from "react";
+import type { ConnectivityStatus } from "../types";
 
 export interface UseOfflineReturn {
-  isOnline: boolean
-  isOffline: boolean
-  lastOnlineAt: Date | null
-  lastOfflineAt: Date | null
+  isOnline: boolean;
+  isOffline: boolean;
+  lastOnlineAt: Date | null;
+  lastOfflineAt: Date | null;
 }
 
 /**
@@ -20,7 +20,7 @@ export function useOffline(): UseOfflineReturn {
     isOnline: navigator.onLine,
     lastOnlineAt: navigator.onLine ? new Date() : null,
     lastOfflineAt: navigator.onLine ? null : new Date(),
-  }))
+  }));
 
   useEffect(() => {
     const handleOnline = () => {
@@ -28,31 +28,30 @@ export function useOffline(): UseOfflineReturn {
         isOnline: true,
         lastOnlineAt: new Date(),
         lastOfflineAt: status.lastOfflineAt,
-      })
-    }
+      });
+    };
 
     const handleOffline = () => {
       setStatus({
         isOnline: false,
         lastOnlineAt: status.lastOnlineAt,
         lastOfflineAt: new Date(),
-      })
-    }
+      });
+    };
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [status.lastOfflineAt, status.lastOnlineAt])
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [status.lastOfflineAt, status.lastOnlineAt]);
 
   return {
     isOnline: status.isOnline,
     isOffline: !status.isOnline,
     lastOnlineAt: status.lastOnlineAt,
     lastOfflineAt: status.lastOfflineAt,
-  }
+  };
 }
-

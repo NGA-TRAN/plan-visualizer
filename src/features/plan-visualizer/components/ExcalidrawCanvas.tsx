@@ -1,46 +1,53 @@
 // ExcalidrawCanvas Component
 // Wrapper for @excalidraw/excalidraw with error boundary and theme support
 
-import { Component, type ReactNode, useEffect, useRef } from 'react'
-import { Excalidraw } from '@excalidraw/excalidraw'
-import '@excalidraw/excalidraw/index.css'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { Button } from '@/shared/components'
-import { cn } from '@/shared/utils/cn'
-import type { ExcalidrawCanvasProps } from '../types'
+import { Component, type ReactNode, useEffect, useRef } from "react";
+import { Excalidraw } from "@excalidraw/excalidraw";
+import "@excalidraw/excalidraw/index.css";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/shared/components";
+import { cn } from "@/shared/utils/cn";
+import type { ExcalidrawCanvasProps } from "../types";
 
 // Type for Excalidraw API - using any to avoid import issues
 type ExcalidrawAPI = {
-  updateScene: (sceneData: { elements?: any[]; appState?: any; files?: any }) => void
-  scrollToContent: (elements: any[], appState?: any) => void
-  getAppState: () => any
-}
+  updateScene: (sceneData: {
+    elements?: any[];
+    appState?: any;
+    files?: any;
+  }) => void;
+  scrollToContent: (elements: any[], appState?: any) => void;
+  getAppState: () => any;
+};
 
 // Error Boundary for catching Excalidraw render failures
 interface ErrorBoundaryState {
-  hasError: boolean
-  error: Error | null
+  hasError: boolean;
+  error: Error | null;
 }
 
 interface ErrorBoundaryProps {
-  children: ReactNode
-  onReset?: () => void
+  children: ReactNode;
+  onReset?: () => void;
 }
 
-class ExcalidrawErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ExcalidrawErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
-    this.props.onReset?.()
-  }
+    this.setState({ hasError: false, error: null });
+    this.props.onReset?.();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -53,22 +60,27 @@ class ExcalidrawErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundar
             Visualization Error
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-            The diagram failed to render. This might be due to a browser compatibility issue or invalid data.
+            The diagram failed to render. This might be due to a browser
+            compatibility issue or invalid data.
           </p>
           {this.state.error && (
             <p className="text-xs text-gray-500 dark:text-gray-500 mb-4 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded max-w-md overflow-auto">
               {this.state.error.message}
             </p>
           )}
-          <Button onClick={this.handleReset} variant="secondary" className="gap-2">
+          <Button
+            onClick={this.handleReset}
+            variant="secondary"
+            className="gap-2"
+          >
             <RefreshCw className="w-4 h-4" />
             Try Again
           </Button>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -95,29 +107,34 @@ function EmptyCanvas() {
         No Plan Visualized
       </h3>
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-        Enter a DataFusion Physical Execution Plan in the input area and click "Visualize" to see it as an interactive diagram.
+        Enter a DataFusion Physical Execution Plan in the input area and click
+        "Visualize" to see it as an interactive diagram.
       </p>
     </div>
-  )
+  );
 }
 
-export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: ExcalidrawCanvasProps) {
+export function ExcalidrawCanvas({
+  scene: propScene = null,
+  theme = "light",
+}: ExcalidrawCanvasProps) {
   // Use the scene prop directly from plan-viz conversion
-  const scene = propScene
-  const elements = (scene as any)?.elements as any[] | undefined
-  const excalidrawAPIRef = useRef<ExcalidrawAPI | null>(null)
+  const scene = propScene;
+  const elements = (scene as any)?.elements as any[] | undefined;
+  const excalidrawAPIRef = useRef<ExcalidrawAPI | null>(null);
 
   // Generate a key based on scene content and theme to help React detect changes
-  const sceneKey = scene && elements 
-    ? `scene-${theme}-${elements.length}-${JSON.stringify(elements[0]?.id || '')}`
-    : `empty-${theme}`
+  const sceneKey =
+    scene && elements
+      ? `scene-${theme}-${elements.length}-${JSON.stringify(elements[0]?.id || "")}`
+      : `empty-${theme}`;
 
   // Update scene when propScene changes and center the view
   useEffect(() => {
     if (scene && excalidrawAPIRef.current && elements && elements.length > 0) {
       // Get current app state to preserve user's view position
-      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {}
-      
+      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {};
+
       // Use the scene as returned by plan-viz conversion,
       // preserving scrollX/scrollY for centering.
       // Let Excalidraw handle background color automatically based on theme prop.
@@ -128,46 +145,49 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
           ...currentAppState,
           // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
           // Preserve scrollX and scrollY for centering
-          scrollX: currentAppState.scrollX ?? (scene as any)?.appState?.scrollX ?? 0,
-          scrollY: currentAppState.scrollY ?? (scene as any)?.appState?.scrollY ?? 0,
+          scrollX:
+            currentAppState.scrollX ?? (scene as any)?.appState?.scrollX ?? 0,
+          scrollY:
+            currentAppState.scrollY ?? (scene as any)?.appState?.scrollY ?? 0,
           // Collapse sidebar by default
           sidebarOpen: false,
         },
         files: (scene as any).files || {},
-      }
-      
+      };
+
       // Update the scene using the API
-      excalidrawAPIRef.current.updateScene(mergedScene)
-      
+      excalidrawAPIRef.current.updateScene(mergedScene);
     }
-  }, [scene, elements])
+  }, [scene, elements]);
 
   // Update when theme changes to ensure Excalidraw picks up the theme
   useEffect(() => {
     if (excalidrawAPIRef.current && scene && elements && elements.length > 0) {
       // Force Excalidraw to update by calling updateScene with current state
       // This ensures theme changes are reflected
-      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {}
+      const currentAppState = excalidrawAPIRef.current.getAppState?.() || {};
       excalidrawAPIRef.current.updateScene({
         appState: {
           ...currentAppState,
           // Let Excalidraw handle viewBackgroundColor based on theme prop
         },
-      })
+      });
     }
-  }, [theme, scene, elements])
+  }, [theme, scene, elements]);
 
   // Show empty state if no scene or elements
   if (!scene || !elements || elements.length === 0) {
     return (
-      <div className={cn(
-        'h-full min-h-[400px] rounded-lg border',
-        'bg-white dark:bg-gray-800',
-        'border-gray-200 dark:border-gray-700'
-      )}>
+      <div
+        className={cn(
+          "h-full min-h-[400px] rounded-lg border",
+          "bg-white dark:bg-gray-800",
+          "border-gray-200 dark:border-gray-700",
+        )}
+      >
         <EmptyCanvas />
       </div>
-    )
+    );
   }
 
   // Use the scene as returned by plan-viz conversion,
@@ -184,21 +204,21 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
       // Collapse sidebar by default
       sidebarOpen: false,
     },
-  }
+  };
 
   return (
-    <div 
+    <div
       className={cn(
-        'rounded-lg border overflow-hidden planviz-excalidraw',
-        'border-gray-200 dark:border-gray-700',
-        'h-full w-full flex flex-col'
+        "rounded-lg border overflow-hidden planviz-excalidraw",
+        "border-gray-200 dark:border-gray-700",
+        "h-full w-full flex flex-col",
       )}
     >
       <ExcalidrawErrorBoundary>
         <div className="flex-1 min-h-0" key={sceneKey}>
           <Excalidraw
             excalidrawAPI={(api) => {
-              excalidrawAPIRef.current = api
+              excalidrawAPIRef.current = api;
               // If API becomes available and we have a scene, update it immediately
               if (scene && elements && elements.length > 0) {
                 const mergedScene = {
@@ -213,20 +233,22 @@ export function ExcalidrawCanvas({ scene: propScene = null, theme = 'light' }: E
                     sidebarOpen: false,
                   },
                   files: (scene as any).files || {},
-                }
-                api.updateScene(mergedScene)
+                };
+                api.updateScene(mergedScene);
               }
             }}
             initialData={mergedScene}
             theme={theme}
             // Keep sidebar non-docked so it doesn't permanently occupy a large column
             // and rely on Excalidraw's default horizontal top menu layout.
-            UIOptions={{
-              dockedSidebarBreakpoint: 10000,
-            } as any}
+            UIOptions={
+              {
+                dockedSidebarBreakpoint: 10000,
+              } as any
+            }
           />
         </div>
       </ExcalidrawErrorBoundary>
     </div>
-  )
+  );
 }

@@ -1,15 +1,15 @@
 // Toast Container Component
 // Stacks and manages toast notifications
 
-import { createPortal } from 'react-dom'
-import { Toast } from './Toast'
-import { useNotifications } from '../hooks/useNotifications'
+import { createPortal } from "react-dom";
+import { Toast } from "./Toast";
+import { useNotifications } from "../hooks/useNotifications";
 
 export function ToastContainer() {
-  const { notifications, dismissNotification } = useNotifications()
+  const { notifications, dismissNotification } = useNotifications();
 
   if (notifications.length === 0) {
-    return null
+    return null;
   }
 
   return createPortal(
@@ -26,7 +26,6 @@ export function ToastContainer() {
         />
       ))}
     </div>,
-    document.body
-  )
+    document.body,
+  );
 }
-

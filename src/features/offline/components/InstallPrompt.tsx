@@ -1,41 +1,41 @@
 // InstallPrompt Component
 // Shows installation prompt UI when app is installable
 
-import { useState, useEffect } from 'react'
-import { useInstallPrompt } from '../hooks/useInstallPrompt'
-import { Download, X } from 'lucide-react'
-import { Button } from '@/shared/components'
+import { useState, useEffect } from "react";
+import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import { Download, X } from "lucide-react";
+import { Button } from "@/shared/components";
 
 export function InstallPrompt() {
-  const { canInstall, isInstalled, prompt, dismiss } = useInstallPrompt()
-  const [isVisible, setIsVisible] = useState(false)
+  const { canInstall, isInstalled, prompt, dismiss } = useInstallPrompt();
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Show prompt after a delay to avoid being too aggressive
     if (canInstall && !isInstalled) {
       const timer = setTimeout(() => {
-        setIsVisible(true)
-      }, 3000) // Show after 3 seconds
+        setIsVisible(true);
+      }, 3000); // Show after 3 seconds
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
     } else {
-      setIsVisible(false)
+      setIsVisible(false);
     }
-  }, [canInstall, isInstalled])
+  }, [canInstall, isInstalled]);
 
   if (!isVisible || !canInstall || isInstalled) {
-    return null
+    return null;
   }
 
   const handleInstall = async () => {
-    await prompt()
-    setIsVisible(false)
-  }
+    await prompt();
+    setIsVisible(false);
+  };
 
   const handleDismiss = () => {
-    dismiss()
-    setIsVisible(false)
-  }
+    dismiss();
+    setIsVisible(false);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm z-50 animate-in slide-in-from-bottom-5">
@@ -71,6 +71,5 @@ export function InstallPrompt() {
         </button>
       </div>
     </div>
-  )
+  );
 }
-

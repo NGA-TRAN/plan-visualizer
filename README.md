@@ -15,7 +15,7 @@ A graphical web application for visualizing Apache DataFusion physical execution
 
 **[🚀 Use Online App](https://nga-tran.github.io/plan-visualizer/)**
 
-Simply paste your DataFusion physical execution plan and watch it transform into an interactive Excalidraw diagram.
+Paste or upload a plain-text DataFusion physical execution plan (.sql, .txt, or similar) and watch it transform into an interactive Excalidraw diagram.
 
 ![Plan Visualizer showing execution plan input and visual diagram output](PlanVisualizer.png)
 

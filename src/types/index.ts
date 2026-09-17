@@ -5,32 +5,32 @@
 // User Entity
 // =============================================================================
 
-export type UserRole = 'admin' | 'editor' | 'viewer'
-export type UserStatus = 'active' | 'inactive' | 'pending'
+export type UserRole = "admin" | "editor" | "viewer";
+export type UserStatus = "active" | "inactive" | "pending";
 
 export interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  status: UserStatus
-  createdAt: Date
-  avatar: string
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  createdAt: Date;
+  avatar: string;
 }
 
 // =============================================================================
 // Metric Card Entity (Dashboard KPI Widget)
 // =============================================================================
 
-export type TrendDirection = 'up' | 'down' | 'neutral'
+export type TrendDirection = "up" | "down" | "neutral";
 
 export interface MetricCard {
-  id: string
-  title: string
-  value: string | number
-  trend: TrendDirection
-  changePercent: number
-  icon: string
+  id: string;
+  title: string;
+  value: string | number;
+  trend: TrendDirection;
+  changePercent: number;
+  icon: string;
 }
 
 // =============================================================================
@@ -38,27 +38,27 @@ export interface MetricCard {
 // =============================================================================
 
 export interface NavigationItem {
-  id: string
-  label: string
-  icon: string
-  route?: string
-  children?: NavigationItem[]
-  badge?: number
+  id: string;
+  label: string;
+  icon: string;
+  route?: string;
+  children?: NavigationItem[];
+  badge?: number;
 }
 
 // =============================================================================
 // Notification (Toast) Entity
 // =============================================================================
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info'
+export type NotificationType = "success" | "error" | "warning" | "info";
 
 export interface Notification {
-  id: string
-  type: NotificationType
-  message: string
-  duration: number
-  dismissible: boolean
-  createdAt: number
+  id: string;
+  type: NotificationType;
+  message: string;
+  duration: number;
+  dismissible: boolean;
+  createdAt: number;
 }
 
 // =============================================================================
@@ -66,31 +66,31 @@ export interface Notification {
 // =============================================================================
 
 export type ActivityType =
-  | 'user_created'
-  | 'user_updated'
-  | 'user_deleted'
-  | 'login'
-  | 'settings_changed'
+  | "user_created"
+  | "user_updated"
+  | "user_deleted"
+  | "login"
+  | "settings_changed";
 
 export interface Activity {
-  id: string
-  type: ActivityType
-  description: string
-  timestamp: Date
-  userId?: string
-  metadata?: Record<string, unknown>
+  id: string;
+  type: ActivityType;
+  description: string;
+  timestamp: Date;
+  userId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // =============================================================================
 // Theme Entity
 // =============================================================================
 
-export type ThemeMode = 'light' | 'dark' | 'system'
-export type ResolvedTheme = 'light' | 'dark'
+export type ThemeMode = "light" | "dark" | "system";
+export type ResolvedTheme = "light" | "dark";
 
 export interface ThemePreference {
-  mode: ThemeMode
-  resolved: ResolvedTheme
+  mode: ThemeMode;
+  resolved: ResolvedTheme;
 }
 
 // =============================================================================
@@ -99,24 +99,25 @@ export interface ThemePreference {
 
 export interface AppStore {
   // Navigation
-  navigationItems: NavigationItem[]
-  sidebarCollapsed: boolean
-  toggleSidebar: () => void
+  navigationItems: NavigationItem[];
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
   /** Mobile drawer visibility. Session-only; not persisted. */
-  mobileNavOpen: boolean
-  toggleMobileNav: () => void
-  closeMobileNav: () => void
+  mobileNavOpen: boolean;
+  toggleMobileNav: () => void;
+  closeMobileNav: () => void;
 
   // Notifications
-  notifications: Notification[]
-  addNotification: (notification: Omit<Notification, 'id' | 'createdAt'>) => void
-  dismissNotification: (id: string) => void
+  notifications: Notification[];
+  addNotification: (
+    notification: Omit<Notification, "id" | "createdAt">,
+  ) => void;
+  dismissNotification: (id: string) => void;
 
   // Theme
-  theme: ThemePreference
-  setThemeMode: (mode: ThemeMode) => void
+  theme: ThemePreference;
+  setThemeMode: (mode: ThemeMode) => void;
 
   // Initialization
-  initializeStore: () => void
+  initializeStore: () => void;
 }
-
