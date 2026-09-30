@@ -1,7 +1,8 @@
 // PlanVisualizerPage Component
 // Main page orchestrating plan input, conversion, and visualization
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { Card } from "@/shared/components";
 import { useAppStore } from "@/store";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
@@ -13,8 +14,14 @@ import { SAMPLE_PLANS, getSamplePlan } from "../data/samples";
 import { savePlanToStorage } from "@/features/offline/services/storageManager";
 import { cn } from "@/shared/utils/cn";
 import { readPlanFileAsText } from "../utils/readPlanFile";
+import { readSharedPlan } from "../utils/sharePlan";
 
 export function PlanVisualizerPage() {
+  const { hash } = useLocation();
+  const sharedLoadId = useRef(0);
+  const [isLoadingSharedPlan, setIsLoadingSharedPlan] = useState(false);
+  const [shareLinkError, setShareLinkError] = useState<string | null>(null);
+  const [fitSharedPlan, setFitSharedPlan] = useState(false);
   // State
   const [inputText, setInputText] = useState("");
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
@@ -26,6 +33,50 @@ export function PlanVisualizerPage() {
 
   // Conversion hook
   const { state, convert, displayScene } = usePlanConverter();
+
+  // Load shared plans once per URL change. Ignore stale decodes after edits,
+  // navigation, or StrictMode effect cleanup.
+  useEffect(() => {
+    const requestId = ++sharedLoadId.current;
+    let cancelled = false;
+    setShareLinkError(null);
+    if (!hash.startsWith("#plan=")) {
+      setIsLoadingSharedPlan(false);
+      return;
+    }
+    setIsLoadingSharedPlan(true);
+    readSharedPlan(hash).then(
+      (plan) => {
+        if (cancelled || requestId !== sharedLoadId.current || plan === null)
+          return;
+        setInputText(plan);
+        setSelectedSampleId(null);
+        setLoadedFileName(null);
+        setFitSharedPlan(true);
+        convert(plan);
+        setIsLoadingSharedPlan(false);
+      },
+      (error: unknown) => {
+        if (cancelled || requestId !== sharedLoadId.current) return;
+        setShareLinkError(
+          error instanceof Error
+            ? error.message
+            : "Could not open this shared plan.",
+        );
+        setIsLoadingSharedPlan(false);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [hash, convert]);
+
+  const cancelSharedLoad = useCallback(() => {
+    ++sharedLoadId.current;
+    setIsLoadingSharedPlan(false);
+    setShareLinkError(null);
+    setFitSharedPlan(false);
+  }, []);
 
   // Handle visualization
   const handleVisualize = useCallback(async () => {
@@ -54,22 +105,31 @@ export function PlanVisualizerPage() {
     }
   }, [inputText, convert, notify, displayScene]);
 
-  const handleInputChange = useCallback((value: string) => {
-    setInputText(value);
-    setSelectedSampleId(null);
-    setLoadedFileName(null);
-  }, []);
+  const handleInputChange = useCallback(
+    (value: string) => {
+      cancelSharedLoad();
+      setInputText(value);
+      setSelectedSampleId(null);
+      setLoadedFileName(null);
+    },
+    [cancelSharedLoad],
+  );
 
-  const handleSelectSample = useCallback((id: string) => {
-    const sample = getSamplePlan(id);
-    if (!sample) return;
-    setSelectedSampleId(id);
-    setLoadedFileName(null);
-    setInputText(sample.plan);
-  }, []);
+  const handleSelectSample = useCallback(
+    (id: string) => {
+      const sample = getSamplePlan(id);
+      if (!sample) return;
+      cancelSharedLoad();
+      setSelectedSampleId(id);
+      setLoadedFileName(null);
+      setInputText(sample.plan);
+    },
+    [cancelSharedLoad],
+  );
 
   const handleUploadFile = useCallback(
     async (file: File) => {
+      cancelSharedLoad();
       const result = await readPlanFileAsText(file);
       if (!result.ok) {
         if (result.code === "too_large") {
@@ -83,7 +143,7 @@ export function PlanVisualizerPage() {
       setLoadedFileName(result.fileName);
       setInputText(result.contents);
     },
-    [notify],
+    [notify, cancelSharedLoad],
   );
 
   // Resizable panels hook
@@ -107,11 +167,19 @@ export function PlanVisualizerPage() {
           className="flex-shrink-0"
         >
           <Card className="p-3 sm:p-4 h-full">
+            {isLoadingSharedPlan && (
+              <p role="status" className="mb-2 text-sm text-gray-500">
+                Opening shared plan…
+              </p>
+            )}
             <PlanInput
               value={inputText}
               onChange={handleInputChange}
               onVisualize={handleVisualize}
-              error={state.status === "error" ? state.errorMessage : null}
+              error={
+                shareLinkError ??
+                (state.status === "error" ? state.errorMessage : null)
+              }
               samples={SAMPLE_PLANS}
               selectedSampleId={selectedSampleId}
               onSelectSample={handleSelectSample}
@@ -139,7 +207,11 @@ export function PlanVisualizerPage() {
           }}
           className="flex-shrink-0"
         >
-          <ExcalidrawCanvas scene={displayScene} theme={theme} />
+          <ExcalidrawCanvas
+            scene={displayScene}
+            theme={theme}
+            fitToContent={fitSharedPlan}
+          />
         </div>
       </div>
 

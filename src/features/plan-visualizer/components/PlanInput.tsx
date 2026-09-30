@@ -6,6 +6,7 @@ import { Button } from "@/shared/components";
 import { Play, FileText, AlertCircle, Upload } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { PlanInputProps } from "../types";
+import { SharePlanButton } from "./SharePlanButton";
 
 export function PlanInput({
   value,
@@ -119,7 +120,7 @@ export function PlanInput({
                   }
                 }}
                 className={cn(
-                  "max-w-[220px] sm:max-w-[280px] truncate text-xs",
+                  "min-w-0 max-w-[220px] sm:max-w-[280px] truncate text-xs",
                   "bg-transparent border-0 p-0 pr-6",
                   "text-primary-600 dark:text-primary-400",
                   "focus:outline-none focus:ring-2 focus:ring-primary-500 rounded",
@@ -191,7 +192,10 @@ export function PlanInput({
 
       {/* Error Banner */}
       {error && (
-        <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <div
+          role="alert"
+          className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+        >
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -212,14 +216,17 @@ export function PlanInput({
           </kbd>{" "}
           to visualize
         </p>
-        <Button
-          onClick={onVisualize}
-          isLoading={false}
-          className="gap-2 w-full sm:w-auto"
-        >
-          <Play className="w-4 h-4" />
-          Visualize
-        </Button>
+        <div className="flex gap-2">
+          <SharePlanButton plan={value} />
+          <Button
+            onClick={onVisualize}
+            isLoading={false}
+            className="gap-2 flex-1 sm:flex-none"
+          >
+            <Play className="w-4 h-4" />
+            Visualize
+          </Button>
+        </div>
       </div>
     </div>
   );

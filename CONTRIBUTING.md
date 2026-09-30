@@ -120,7 +120,9 @@ npm run test:e2e
 To use an existing Google Chrome installation locally, run
 `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. The tests start an isolated
 preview on port 4177 and cover all sample plans, file/text inputs, theme
-styles, exports, and the first visualization after an offline reload.
+styles, exports, and the first visualization after an offline reload. Sharing
+checks cover clipboard copying and fallback, exact text round-trips, automatic
+diagrams on desktop/mobile, damaged or oversized links, and edits during loading.
 
 For deployment-path verification, use `GITHUB_PAGES=true` for both the build
 and test commands. CI runs lint, TypeScript checks, the Pages build, and
