@@ -2,29 +2,11 @@
 // Accordion menu group with expandable children
 
 import { useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { NavIcon } from "./NavIcon";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { NavItem } from "./NavItem";
 import type { NavigationItem } from "@/types";
-
-// Dynamic icon component
-function NavIcon({ name, className }: { name: string; className?: string }) {
-  const iconName = name
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("") as keyof typeof LucideIcons;
-
-  const Icon = LucideIcons[iconName] as React.ComponentType<{
-    className?: string;
-  }>;
-
-  if (!Icon) {
-    return <LucideIcons.Circle className={className} />;
-  }
-
-  return <Icon className={className} />;
-}
 
 export interface NavGroupProps {
   item: NavigationItem;

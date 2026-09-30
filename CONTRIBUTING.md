@@ -33,7 +33,7 @@ git remote add upstream https://github.com/NGA-TRAN/plan-visualizer.git
 
 ### Prerequisites
 
-- **Node.js**: Version 20 or higher
+- **Node.js**: Version 24 LTS (pinned in .nvmrc and package.json for nvm and Volta)
 - **npm**: Comes with Node.js, or install separately
 - **Git**: For version control
 
@@ -42,8 +42,12 @@ git remote add upstream https://github.com/NGA-TRAN/plan-visualizer.git
 1. Install dependencies:
 
 ```bash
-npm install
+nvm install
+nvm use
+npm ci
 ```
+
+Volta users automatically use the version pinned in package.json and can run npm ci directly. CI reads the same version from .nvmrc.
 
 2. Verify the installation:
 
@@ -74,6 +78,7 @@ npm run build
 ```
 
 This command:
+
 - Runs TypeScript type checking (`tsc`)
 - Builds the production bundle with Vite (`vite build`)
 - Outputs optimized files to the `dist/` directory
@@ -87,6 +92,7 @@ npm run preview
 ```
 
 This command:
+
 - Runs TypeScript type checking (`tsc`)
 - Builds the production bundle (`vite build`)
 - Starts a preview server (`vite preview`)
@@ -100,6 +106,43 @@ The application will be available at **http://localhost:4174/** (or the next ava
 - **Type checking**: `npm run type-check` - Check TypeScript types without building
 - **Linting**: `npm run lint` - Check code for linting errors
 - **Formatting**: `npm run format` - Format code with Prettier
+
+### Automated browser checks
+
+After building, install the test browser once and run the regression suite:
+
+```bash
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
+To use an existing Google Chrome installation locally, run
+`PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. The tests start an isolated
+preview on port 4177 and cover all sample plans, file/text inputs, theme
+styles, exports, and the first visualization after an offline reload.
+
+For deployment-path verification, use `GITHUB_PAGES=true` for both the build
+and test commands. CI runs lint, TypeScript checks, the Pages build, and
+these browser tests before publishing.
+
+### Browser data and bundle maintenance
+
+Refresh the compatibility databases periodically with
+`npm update baseline-browser-mapping caniuse-lite`, review the lockfile, and
+rerun the checks above.
+
+The browser suite limits foreground JavaScript loading before visualization
+to 600 KB (uncompressed). The editor and its CSS load when the first plan is
+visualized. Offline precaching intentionally still downloads the complete
+app in the background, including the editor and export support.
+
+Vite's default 500 KB chunk warnings remain enabled. Excalidraw's bundled
+editor, Mermaid/ELK layout code, and font-subsetting code still exceed that
+threshold. Review these separately when updating Excalidraw; splitting our
+application cannot safely subdivide those prebuilt library modules. Check
+startup transfer, rendering, image/scene exports, and offline behavior
+before changing caching or chunk boundaries.
 
 ## Making Changes
 
@@ -129,18 +172,22 @@ git checkout -b fix/your-bug-description
 Before submitting:
 
 1. **Run the development server** and test your changes:
+
    ```bash
    npm run dev
    ```
 
 2. **Build and preview** to ensure the production build works:
+
    ```bash
    npm run build
    npm run preview
    ```
+
    Then test at http://localhost:4174/
 
 3. **Run type checking**:
+
    ```bash
    npm run type-check
    ```
@@ -160,6 +207,7 @@ git commit -m "Add: description of your changes"
 ```
 
 Use conventional commit prefixes when appropriate:
+
 - `Add:` for new features
 - `Fix:` for bug fixes
 - `Update:` for updates to existing features

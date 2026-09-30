@@ -1,15 +1,15 @@
 // Plan Visualizer Types
 // Type definitions for the plan visualization feature
 
-// Excalidraw element type (simplified for our use case)
-export interface ExcalidrawElement {
-  id: string;
-  type: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  [key: string]: unknown;
+import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
+
+export type { ExcalidrawElement };
+
+export interface ExcalidrawScene {
+  elements: readonly ExcalidrawElement[];
+  appState: Partial<AppState>;
+  files: BinaryFiles;
 }
 
 /** Status of the plan conversion process */
@@ -30,10 +30,10 @@ export interface ConversionState {
   previousElements: readonly ExcalidrawElement[] | null;
 
   /** Full Excalidraw scene (as returned by plan-viz), including appState */
-  scene: any | null;
+  scene: ExcalidrawScene | null;
 
   /** Previous successful scene (preserved on error for fallback) */
-  previousScene: any | null;
+  previousScene: ExcalidrawScene | null;
 }
 
 /** Result returned by the plan converter */
@@ -87,7 +87,7 @@ export interface PlanInputProps {
 /** Props for ExcalidrawCanvas component */
 export interface ExcalidrawCanvasProps {
   /** Full scene (elements + appState) to render in the canvas */
-  scene: any | null;
+  scene: ExcalidrawScene | null;
 
   /** Current theme (light/dark) */
   theme?: "light" | "dark";

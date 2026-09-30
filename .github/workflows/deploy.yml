@@ -8,11 +8,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -20,62 +18,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      
+        uses: actions/checkout@v7
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            dist
-          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-      
+          node-version-file: .nvmrc
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
       - name: Build application
         run: npm run build
         env:
-          GITHUB_PAGES: 'true'
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+          GITHUB_PAGES: "true"
+
+      - name: Install browser for smoke tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke tests
+        run: npm run test:e2e
+        env:
+          GITHUB_PAGES: "true"
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v5
         with:
-          name: github-pages-${{ github.run_id }}
           path: dist
-          retention-days: 1
 
   deploy:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages-${{ github.run_id }}
-          path: dist
-      
       - name: Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: './dist'
-      
+        uses: actions/configure-pages@v6
+
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4
-
+        uses: actions/deploy-pages@v5
