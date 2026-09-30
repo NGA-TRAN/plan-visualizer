@@ -54,9 +54,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['recharts', 'lucide-react'],
-          'table-vendor': ['@tanstack/react-table'],
-          'form-vendor': ['react-hook-form', 'zod'],
         },
       },
     },

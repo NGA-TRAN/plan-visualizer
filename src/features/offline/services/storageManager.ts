@@ -1,3 +1,5 @@
+import type { ExcalidrawScene } from "@/features/plan-visualizer/types";
+
 // Storage Manager Service
 // Handles IndexedDB operations for plan data persistence
 
@@ -41,7 +43,7 @@ function generateId(): string {
  */
 export async function savePlanToStorage(
   planText: string,
-  visualizationData: any,
+  visualizationData: ExcalidrawScene,
 ): Promise<string> {
   try {
     const db = await initDatabase();
@@ -60,7 +62,7 @@ export async function savePlanToStorage(
     return id;
   } catch (error) {
     console.error("Failed to save plan to storage:", error);
-    throw new Error("Failed to save plan data locally");
+    throw new Error("Failed to save plan data locally", { cause: error });
   }
 }
 

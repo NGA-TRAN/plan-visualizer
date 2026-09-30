@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { convertPlanToExcalidraw } from "plan-viz";
 import {
   type ExcalidrawElement,
+  type ExcalidrawScene,
   type ConversionState,
   type ConversionResult,
   initialConversionState,
@@ -29,7 +30,7 @@ export interface UsePlanConverterReturn {
   displayElements: readonly ExcalidrawElement[] | null;
 
   /** Get scene (elements + appState) to display (current or fallback to previous) */
-  displayScene: any | null;
+  displayScene: ExcalidrawScene | null;
 }
 
 /**
@@ -62,10 +63,10 @@ export function usePlanConverter(): UsePlanConverterReturn {
 
       // Convert using plan-viz library (returns full Excalidraw JSON scene)
       const result = convertPlanToExcalidraw(trimmedPlan);
-      const scene = result as any;
-
-      // Extract elements from scene (use any to handle plan-viz types)
-      const elements = (scene.elements ?? []) as readonly ExcalidrawElement[];
+      // plan-viz emits Excalidraw JSON, but its declarations use broader types
+      // for fields such as arrowheads and element indexes. Keep that boundary here.
+      const scene = result as unknown as ExcalidrawScene;
+      const elements = scene.elements ?? [];
       const nodeCount = elements.length;
 
       // Calculate center and translate elements to the right to center them
@@ -87,7 +88,7 @@ export function usePlanConverter(): UsePlanConverterReturn {
           // Only translate if offset is significant (more than 50px)
           if (Math.abs(offsetX) > 50) {
             // Translate all elements to the right to center them
-            const translatedElements = (elements as any[]).map((el: any) => {
+            const translatedElements = elements.map((el) => {
               if (el.x !== undefined && typeof el.x === "number") {
                 return {
                   ...el,

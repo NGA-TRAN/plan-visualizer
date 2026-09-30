@@ -1,3 +1,5 @@
+import type { ExcalidrawScene } from "@/features/plan-visualizer/types";
+
 // Offline Feature Types
 // Type definitions for offline functionality, PWA support, and local storage
 
@@ -7,7 +9,7 @@
 export interface PlanData {
   id: string;
   planText: string;
-  visualizationData: any; // Excalidraw scene data
+  visualizationData: ExcalidrawScene; // Excalidraw scene data
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,24 +1,22 @@
 // ExcalidrawCanvas Component
 // Wrapper for @excalidraw/excalidraw with error boundary and theme support
 
-import { Component, type ReactNode, useEffect, useRef } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
-import "@excalidraw/excalidraw/index.css";
+import {
+  Component,
+  lazy,
+  Suspense,
+  type ReactNode,
+  useEffect,
+  useRef,
+} from "react";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/shared/components";
+import { Button, LoadingSpinner } from "@/shared/components";
 import { cn } from "@/shared/utils/cn";
 import type { ExcalidrawCanvasProps } from "../types";
 
-// Type for Excalidraw API - using any to avoid import issues
-type ExcalidrawAPI = {
-  updateScene: (sceneData: {
-    elements?: any[];
-    appState?: any;
-    files?: any;
-  }) => void;
-  scrollToContent: (elements: any[], appState?: any) => void;
-  getAppState: () => any;
-};
+// Load the editor and its stylesheet only when a plan is visualized.
+const Excalidraw = lazy(() => import("./ExcalidrawEditor"));
 
 // Error Boundary for catching Excalidraw render failures
 interface ErrorBoundaryState {
@@ -120,8 +118,8 @@ export function ExcalidrawCanvas({
 }: ExcalidrawCanvasProps) {
   // Use the scene prop directly from plan-viz conversion
   const scene = propScene;
-  const elements = (scene as any)?.elements as any[] | undefined;
-  const excalidrawAPIRef = useRef<ExcalidrawAPI | null>(null);
+  const elements = scene?.elements;
+  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
   // Generate a key based on scene content and theme to help React detect changes
   const sceneKey =
@@ -139,20 +137,18 @@ export function ExcalidrawCanvas({
       // preserving scrollX/scrollY for centering.
       // Let Excalidraw handle background color automatically based on theme prop.
       const mergedScene = {
-        elements: (scene as any).elements || [],
+        elements: scene.elements || [],
         appState: {
-          ...(scene as any)?.appState,
+          ...scene?.appState,
           ...currentAppState,
           // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
           // Preserve scrollX and scrollY for centering
-          scrollX:
-            currentAppState.scrollX ?? (scene as any)?.appState?.scrollX ?? 0,
-          scrollY:
-            currentAppState.scrollY ?? (scene as any)?.appState?.scrollY ?? 0,
+          scrollX: currentAppState.scrollX ?? scene?.appState?.scrollX ?? 0,
+          scrollY: currentAppState.scrollY ?? scene?.appState?.scrollY ?? 0,
           // Collapse sidebar by default
-          sidebarOpen: false,
+          openSidebar: null,
         },
-        files: (scene as any).files || {},
+        files: scene.files || {},
       };
 
       // Update the scene using the API
@@ -194,15 +190,15 @@ export function ExcalidrawCanvas({
   // preserving scrollX/scrollY for centering.
   // Let Excalidraw handle background color automatically based on theme prop.
   const mergedScene = {
-    ...(scene as any),
+    ...scene,
     appState: {
-      ...(scene as any)?.appState,
+      ...scene?.appState,
       // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
       // Preserve scrollX and scrollY for centering
-      scrollX: (scene as any)?.appState?.scrollX ?? 0,
-      scrollY: (scene as any)?.appState?.scrollY ?? 0,
+      scrollX: scene?.appState?.scrollX ?? 0,
+      scrollY: scene?.appState?.scrollY ?? 0,
       // Collapse sidebar by default
-      sidebarOpen: false,
+      openSidebar: null,
     },
   };
 
@@ -216,37 +212,48 @@ export function ExcalidrawCanvas({
     >
       <ExcalidrawErrorBoundary>
         <div className="flex-1 min-h-0" key={sceneKey}>
-          <Excalidraw
-            excalidrawAPI={(api) => {
-              excalidrawAPIRef.current = api;
-              // If API becomes available and we have a scene, update it immediately
-              if (scene && elements && elements.length > 0) {
-                const mergedScene = {
-                  elements: (scene as any).elements || [],
-                  appState: {
-                    ...(scene as any)?.appState,
-                    // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
-                    // Preserve scrollX and scrollY for centering
-                    scrollX: (scene as any)?.appState?.scrollX ?? 0,
-                    scrollY: (scene as any)?.appState?.scrollY ?? 0,
-                    // Collapse sidebar by default
-                    sidebarOpen: false,
-                  },
-                  files: (scene as any).files || {},
-                };
-                api.updateScene(mergedScene);
-              }
-            }}
-            initialData={mergedScene}
-            theme={theme}
-            // Keep sidebar non-docked so it doesn't permanently occupy a large column
-            // and rely on Excalidraw's default horizontal top menu layout.
-            UIOptions={
-              {
-                dockedSidebarBreakpoint: 10000,
-              } as any
+          <Suspense
+            fallback={
+              <div
+                role="status"
+                className="flex h-full items-center justify-center"
+              >
+                <LoadingSpinner />
+                <span className="sr-only">Loading diagram editor</span>
+              </div>
             }
-          />
+          >
+            <Excalidraw
+              excalidrawAPI={(api) => {
+                excalidrawAPIRef.current = api;
+                // If API becomes available and we have a scene, update it immediately
+                if (scene && elements && elements.length > 0) {
+                  const mergedScene = {
+                    elements: scene.elements || [],
+                    appState: {
+                      ...api.getAppState(),
+                      ...scene?.appState,
+                      // Don't override viewBackgroundColor - let Excalidraw handle it via theme prop
+                      // Preserve scrollX and scrollY for centering
+                      scrollX: scene?.appState?.scrollX ?? 0,
+                      scrollY: scene?.appState?.scrollY ?? 0,
+                      // Collapse sidebar by default
+                      openSidebar: null,
+                    },
+                    files: scene.files || {},
+                  };
+                  api.updateScene(mergedScene);
+                }
+              }}
+              initialData={mergedScene}
+              theme={theme}
+              // Keep sidebar non-docked so it doesn't permanently occupy a large column
+              // and rely on Excalidraw's default horizontal top menu layout.
+              UIOptions={{
+                dockedSidebarBreakpoint: 10000,
+              }}
+            />
+          </Suspense>
         </div>
       </ExcalidrawErrorBoundary>
     </div>

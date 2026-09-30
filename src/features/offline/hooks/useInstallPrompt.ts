@@ -16,6 +16,11 @@ export interface InstallPromptResult {
   platform: string;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<InstallPromptResult>;
+}
+
 const INSTALLATION_STATE_KEY = "plan-visualizer-installation-state";
 
 function getInitialInstallationState(): InstallationState {
@@ -57,14 +62,18 @@ function saveInstallationState(state: InstallationState): void {
  * Hook to detect installability and trigger installation
  */
 export function useInstallPrompt(): UseInstallPromptReturn {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [installationState, setInstallationState] = useState<InstallationState>(
     getInitialInstallationState,
   );
 
   useEffect(() => {
     // Check if already installed (standalone mode)
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    if (
+      !installationState.isInstalled &&
+      window.matchMedia("(display-mode: standalone)").matches
+    ) {
       const newState: InstallationState = {
         ...installationState,
         isInstalled: true,
@@ -77,7 +86,7 @@ export function useInstallPrompt(): UseInstallPromptReturn {
     // Listen for install prompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
