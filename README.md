@@ -7,7 +7,8 @@ A graphical web application for visualizing Apache DataFusion physical execution
 - **Color-Coded Visualization**: See key execution properties highlighted throughout the plan
 - **Performance Insights**: Identify bottlenecks such as lost parallelism or sort order, missing pushdown optimizations, and suboptimal operator selection
 - **Interactive Editing**: Edit plans directly in Excalidraw and save back to JSON
-- **Export & Share**: Export to PNG or SVG for documentation and presentations
+- **Share a Plan**: Copy a link that includes the current plan text and opens its diagram automatically
+- **Export**: Export to PNG or SVG for documentation and presentations
 - **Collaboration**: Open the Excalidraw JSON in excalidraw.com for real-time collaborative editing
 - **Offline Support**: Works without internet connection using service workers and local storage
 
@@ -16,6 +17,13 @@ A graphical web application for visualizing Apache DataFusion physical execution
 **[🚀 Use Online App](https://nga-tran.github.io/plan-visualizer/)**
 
 Paste or upload a plain-text DataFusion physical execution plan (.sql, .txt, or similar) and watch it transform into an interactive Excalidraw diagram.
+
+Click **Share** beside **Visualize** to copy a link to the current text. The recipient
+opens it in their browser to see the text and diagram immediately, including on mobile.
+Links point to the public app and contain compressed plan text in the URL fragment;
+no backend or account is needed. They share the text, not manual edits to the diagram.
+If clipboard access is blocked, the app shows a selectable link to copy manually.
+Plans exceeding 1 MiB of text or a 32,000-character link must be shared as text files.
 
 ![Plan Visualizer showing execution plan input and visual diagram output](PlanVisualizer.png)
 

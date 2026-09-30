@@ -115,6 +115,7 @@ function EmptyCanvas() {
 export function ExcalidrawCanvas({
   scene: propScene = null,
   theme = "light",
+  fitToContent = false,
 }: ExcalidrawCanvasProps) {
   // Use the scene prop directly from plan-viz conversion
   const scene = propScene;
@@ -153,8 +154,20 @@ export function ExcalidrawCanvas({
 
       // Update the scene using the API
       excalidrawAPIRef.current.updateScene(mergedScene);
+      if (fitToContent) {
+        const api = excalidrawAPIRef.current;
+        requestAnimationFrame(() => {
+          if (excalidrawAPIRef.current === api) {
+            api.scrollToContent(elements, {
+              fitToViewport: true,
+              viewportZoomFactor: 0.85,
+              animate: false,
+            });
+          }
+        });
+      }
     }
-  }, [scene, elements]);
+  }, [scene, elements, fitToContent]);
 
   // Update when theme changes to ensure Excalidraw picks up the theme
   useEffect(() => {
@@ -243,6 +256,17 @@ export function ExcalidrawCanvas({
                     files: scene.files || {},
                   };
                   api.updateScene(mergedScene);
+                  if (fitToContent) {
+                    requestAnimationFrame(() => {
+                      if (excalidrawAPIRef.current === api) {
+                        api.scrollToContent(elements, {
+                          fitToViewport: true,
+                          viewportZoomFactor: 0.85,
+                          animate: false,
+                        });
+                      }
+                    });
+                  }
                 }
               }}
               initialData={mergedScene}

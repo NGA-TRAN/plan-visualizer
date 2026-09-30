@@ -89,6 +89,9 @@ export interface ExcalidrawCanvasProps {
   /** Full scene (elements + appState) to render in the canvas */
   scene: ExcalidrawScene | null;
 
+  /** Fit an opened shared plan into the recipient's viewport. */
+  fitToContent?: boolean;
+
   /** Current theme (light/dark) */
   theme?: "light" | "dark";
 }
