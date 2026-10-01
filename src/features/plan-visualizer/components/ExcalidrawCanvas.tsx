@@ -13,7 +13,7 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button, LoadingSpinner } from "@/shared/components";
 import { cn } from "@/shared/utils/cn";
-import type { ExcalidrawCanvasProps } from "../types";
+import type { ExcalidrawCanvasProps, ExcalidrawScene } from "../types";
 
 // Load the editor and its stylesheet only when a plan is visualized.
 const Excalidraw = lazy(() => import("./ExcalidrawEditor"));
@@ -121,6 +121,7 @@ export function ExcalidrawCanvas({
   const scene = propScene;
   const elements = scene?.elements;
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
+  const fittedSceneRef = useRef<ExcalidrawScene | null>(null);
 
   // Generate a key based on scene content and theme to help React detect changes
   const sceneKey =
@@ -154,20 +155,8 @@ export function ExcalidrawCanvas({
 
       // Update the scene using the API
       excalidrawAPIRef.current.updateScene(mergedScene);
-      if (fitToContent) {
-        const api = excalidrawAPIRef.current;
-        requestAnimationFrame(() => {
-          if (excalidrawAPIRef.current === api) {
-            api.scrollToContent(elements, {
-              fitToViewport: true,
-              viewportZoomFactor: 0.85,
-              animate: false,
-            });
-          }
-        });
-      }
     }
-  }, [scene, elements, fitToContent]);
+  }, [scene, elements]);
 
   // Update when theme changes to ensure Excalidraw picks up the theme
   useEffect(() => {
@@ -239,6 +228,7 @@ export function ExcalidrawCanvas({
             <Excalidraw
               excalidrawAPI={(api) => {
                 excalidrawAPIRef.current = api;
+                fittedSceneRef.current = null;
                 // If API becomes available and we have a scene, update it immediately
                 if (scene && elements && elements.length > 0) {
                   const mergedScene = {
@@ -256,18 +246,36 @@ export function ExcalidrawCanvas({
                     files: scene.files || {},
                   };
                   api.updateScene(mergedScene);
-                  if (fitToContent) {
-                    requestAnimationFrame(() => {
-                      if (excalidrawAPIRef.current === api) {
-                        api.scrollToContent(elements, {
-                          fitToViewport: true,
-                          viewportZoomFactor: 0.85,
-                          animate: false,
-                        });
-                      }
+                }
+              }}
+              onChange={(_currentElements, appState) => {
+                // Initialization can restore the camera after the API is exposed.
+                // Fit only once the scene is loaded, and leave subsequent user
+                // zooming/panning alone until a new plan is visualized.
+                if (
+                  !fitToContent ||
+                  appState.isLoading ||
+                  appState.width <= 0 ||
+                  appState.height <= 0 ||
+                  fittedSceneRef.current === scene
+                )
+                  return;
+                const api = excalidrawAPIRef.current;
+                if (!api) return;
+                fittedSceneRef.current = scene;
+                requestAnimationFrame(() => {
+                  if (
+                    excalidrawAPIRef.current === api &&
+                    fittedSceneRef.current === scene
+                  ) {
+                    api.scrollToContent(elements, {
+                      fitToViewport: true,
+                      viewportZoomFactor: 0.95,
+                      canvasOffsets: { top: 64, bottom: 48 },
+                      animate: false,
                     });
                   }
-                }
+                });
               }}
               initialData={mergedScene}
               theme={theme}

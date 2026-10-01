@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "idb": "^8.0.3",
     "lucide-react": "^0.294.0",
-    "plan-viz": "^0.1.24",
+    "plan-viz": "^0.1.25",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.2",

@@ -21,7 +21,6 @@ export function PlanVisualizerPage() {
   const sharedLoadId = useRef(0);
   const [isLoadingSharedPlan, setIsLoadingSharedPlan] = useState(false);
   const [shareLinkError, setShareLinkError] = useState<string | null>(null);
-  const [fitSharedPlan, setFitSharedPlan] = useState(false);
   // State
   const [inputText, setInputText] = useState("");
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
@@ -52,7 +51,6 @@ export function PlanVisualizerPage() {
         setInputText(plan);
         setSelectedSampleId(null);
         setLoadedFileName(null);
-        setFitSharedPlan(true);
         convert(plan);
         setIsLoadingSharedPlan(false);
       },
@@ -75,7 +73,6 @@ export function PlanVisualizerPage() {
     ++sharedLoadId.current;
     setIsLoadingSharedPlan(false);
     setShareLinkError(null);
-    setFitSharedPlan(false);
   }, []);
 
   // Handle visualization
@@ -161,10 +158,9 @@ export function PlanVisualizerPage() {
         <div
           style={{
             height: `${inputHeight * 100}%`,
-            minHeight: "150px",
             maxHeight: "80%",
           }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 min-h-[380px] sm:min-h-[320px]"
         >
           <Card className="p-3 sm:p-4 h-full">
             {isLoadingSharedPlan && (
@@ -207,11 +203,7 @@ export function PlanVisualizerPage() {
           }}
           className="flex-shrink-0"
         >
-          <ExcalidrawCanvas
-            scene={displayScene}
-            theme={theme}
-            fitToContent={fitSharedPlan}
-          />
+          <ExcalidrawCanvas scene={displayScene} theme={theme} fitToContent />
         </div>
       </div>
 
@@ -222,8 +214,8 @@ export function PlanVisualizerPage() {
           plain-text plan file (.sql, .txt) into the input area.
         </p>
         <p>
-          The visualizer supports Physical Execution Plans from Apache
-          DataFusion.
+          Explore single-node plans, custom operators, and distributed execution
+          plans (alpha).
         </p>
       </div>
     </div>

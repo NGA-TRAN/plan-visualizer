@@ -3,9 +3,10 @@
 
 import { useRef, useState, useCallback } from "react";
 import { Button } from "@/shared/components";
-import { Play, FileText, AlertCircle, Upload } from "lucide-react";
+import { Play, AlertCircle, Upload } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { PlanInputProps } from "../types";
+import { SampleMenus } from "./SampleMenus";
 import { SharePlanButton } from "./SharePlanButton";
 
 export function PlanInput({
@@ -107,52 +108,21 @@ export function PlanInput({
               )}
             </>
           )}
-          {samples.length > 0 && onSelectSample && (
-            <label className="flex items-center gap-1.5 min-w-0">
-              <FileText className="w-3 h-3 text-primary-600 dark:text-primary-400 flex-shrink-0" />
-              <span className="sr-only">Load a sample</span>
-              <select
-                id="sample-plan"
-                value={selectedSampleId ?? ""}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    onSelectSample(e.target.value);
-                  }
-                }}
-                className={cn(
-                  "min-w-0 max-w-[220px] sm:max-w-[280px] truncate text-xs",
-                  "bg-transparent border-0 p-0 pr-6",
-                  "text-primary-600 dark:text-primary-400",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500 rounded",
-                  "cursor-pointer",
-                )}
-              >
-                <option value="" disabled>
-                  Load a sample…
-                </option>
-                {Array.from(new Set(samples.map((sample) => sample.group))).map(
-                  (group) => (
-                    <optgroup key={group} label={group}>
-                      {samples
-                        .filter((sample) => sample.group === group)
-                        .map((sample) => (
-                          <option key={sample.id} value={sample.id}>
-                            {sample.label}
-                          </option>
-                        ))}
-                    </optgroup>
-                  ),
-                )}
-              </select>
-            </label>
-          )}
         </div>
       </div>
+
+      {samples.length > 0 && onSelectSample && (
+        <SampleMenus
+          samples={samples}
+          selectedSampleId={selectedSampleId}
+          onSelectSample={onSelectSample}
+        />
+      )}
 
       {/* Textarea */}
       <div
         className={cn(
-          "relative flex-1 overflow-auto rounded-lg",
+          "relative flex-1 min-h-[110px] sm:min-h-[120px] overflow-auto rounded-lg",
           isDragOver &&
             "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900",
         )}
@@ -167,7 +137,7 @@ export function PlanInput({
           onKeyDown={handleKeyDown}
           placeholder={`Paste or drop a plan file here...\n\nExample 1 (Physical Plan only):\nProjectionExec: expr=[id@0 as id]\n  FilterExec: id@0 > 100\n    ParquetExec: file_groups={...}\n\nExample 2 (Full EXPLAIN output):\nEXPLAIN SELECT * FROM dim;\n+---------------+---------------------------------------------------------------------------------------------------------------------+\n| plan_type     | plan                                                                                                                |\n+---------------+---------------------------------------------------------------------------------------------------------------------+\n| logical_plan  | TableScan: dim2_parquet projection=[d_dkey, env, service, host]                                                     |\n| physical_plan | DataSourceExec: file_groups={1 groups: [[d_1.parquet]]}, projection=[d_dkey, env, service, host], file_type=parquet |\n+---------------+---------------------------------------------------------------------------------------------------------------------+`}
           className={cn(
-            "w-full h-full min-h-[150px] sm:min-h-[200px] p-3 sm:p-4 font-mono text-xs sm:text-sm",
+            "w-full h-full p-3 sm:p-4 font-mono text-xs sm:text-sm",
             "bg-gray-50 dark:bg-gray-800/50",
             "border rounded-lg resize-none",
             "placeholder:text-gray-400 dark:placeholder:text-gray-500",
