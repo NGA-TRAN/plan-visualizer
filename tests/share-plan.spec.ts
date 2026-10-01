@@ -118,22 +118,25 @@ test("shares exact Unicode text and opens it as a diagram in a fresh session", a
   ).toBe(edited);
 });
 
-test("all ten samples fit in share links and render automatically", async ({
+test("all sample categories fit in share links and render automatically", async ({
   page,
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("./");
   const samples = await page
-    .locator("#sample-plan option")
+    .locator('select[id^="sample-"] option')
     .evaluateAll((options) =>
       options
-        .map((option) => (option as HTMLOptionElement).value)
-        .filter(Boolean),
+        .map((option) => ({
+          id: (option as HTMLOptionElement).value,
+          menu: option.closest("select")!.id,
+        }))
+        .filter((option) => option.id),
     );
-  expect(samples).toHaveLength(10);
-  for (const id of samples) {
-    await page.selectOption("#sample-plan", id);
+  expect(samples).toHaveLength(19);
+  for (const sample of samples) {
+    await page.selectOption(`#${sample.menu}`, sample.id);
     const text = await page.locator("#plan-input").inputValue();
     const link = await copyLink(page);
     expect(
@@ -147,7 +150,9 @@ test("all ten samples fit in share links and render automatically", async ({
     }, new URL(link).hash);
     await expectDiagram(page, "Exec");
     await expect(page.locator("#plan-input")).toHaveValue(text);
-    await expect(page.locator("#sample-plan")).toHaveValue("");
+    for (const menu of ["single-node", "custom", "distributed"]) {
+      await expect(page.locator(`#sample-${menu}`)).toHaveValue("");
+    }
   }
 });
 

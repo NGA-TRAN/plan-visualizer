@@ -4,7 +4,7 @@ Visualize Apache DataFusion physical execution plans as interactive, color-coded
 
 **[Open the app](https://nga-tran.github.io/plan-visualizer/)**
 
-- Paste a plan, upload or drop a text file, or choose from ten samples, then click **Visualize**.
+- Paste a plan, upload or drop a text file, or choose a single-node, custom, or distributed (alpha) sample, then click **Visualize**.
 - Edit diagrams and export PNG, SVG, or Excalidraw JSON.
 - Click **Share** to copy a link that restores the plan text and automatically opens its diagram.
 - Use light/dark themes, desktop/mobile layouts, and offline access after the app is cached.

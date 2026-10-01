@@ -62,7 +62,20 @@ test.describe("startup budget", () => {
 
   test("loads the input UI without loading the editor", async ({ page }) => {
     await page.goto("./", { waitUntil: "networkidle" });
-    await expect(page.locator("#sample-plan option")).toHaveCount(11);
+    await expect(page.getByRole("combobox")).toHaveCount(3);
+    await expect(
+      page.getByRole("combobox", { name: "Single-node plans", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "Custom plans", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", {
+        name: "Distributed plans (alpha)",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.locator('select[id^="sample-"] option')).toHaveCount(22);
     await expect(
       page.getByText("No Plan Visualized", { exact: true }),
     ).toBeVisible();
@@ -90,15 +103,18 @@ test("renders all samples, uploaded files, dropped files and pasted text", async
 }) => {
   await page.goto("./");
   const samples = await page
-    .locator("#sample-plan option")
+    .locator('select[id^="sample-"] option')
     .evaluateAll((options) =>
       options
-        .map((option) => (option as HTMLOptionElement).value)
-        .filter(Boolean),
+        .map((option) => ({
+          id: (option as HTMLOptionElement).value,
+          menu: option.closest("select")!.id,
+        }))
+        .filter((option) => option.id),
     );
-  expect(samples).toHaveLength(10);
+  expect(samples).toHaveLength(19);
   for (const sample of samples) {
-    await page.selectOption("#sample-plan", sample);
+    await page.selectOption(`#${sample.menu}`, sample.id);
     await visualize(page);
   }
 
@@ -129,7 +145,7 @@ test("applies light and dark theme styles to the app and editor", async ({
   page,
 }) => {
   await page.goto("./");
-  await page.selectOption("#sample-plan", "simple-filter");
+  await page.selectOption("#sample-single-node", "simple-filter");
   await visualize(page);
   const themeBackground = () =>
     page.evaluate(() =>
@@ -171,7 +187,7 @@ test("first visualization works offline after the app is cached", async ({
   await context.setOffline(true);
   try {
     await page.reload();
-    await page.selectOption("#sample-plan", "hash-join");
+    await page.selectOption("#sample-single-node", "hash-join");
     await visualize(page);
     await expect(page.locator(".excalidraw canvas").first()).toBeVisible();
   } finally {
@@ -191,7 +207,7 @@ test("exports valid PNG, SVG and editable scene files", async ({ page }) => {
     }
   });
   await page.goto("./");
-  await page.selectOption("#sample-plan", "simple-filter");
+  await page.selectOption("#sample-single-node", "simple-filter");
   await visualize(page);
   await page.getByTestId("main-menu-trigger").click();
   await page.getByText("Export image...", { exact: true }).click();
@@ -253,7 +269,7 @@ test("standalone installation state settles without repeated updates", async ({
       ),
     )
     .toBe(true);
-  await page.selectOption("#sample-plan", "simple-filter");
+  await page.selectOption("#sample-single-node", "simple-filter");
   await visualize(page);
 });
 
@@ -268,11 +284,11 @@ test("keeps mobile navigation and visualization usable", async ({ page }) => {
     page.getByRole("link", { name: "Plan Visualizer", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Close menu", exact: true }).click();
-  await page.selectOption("#sample-plan", "simple-filter");
+  await page.selectOption("#sample-single-node", "simple-filter");
   await page.getByRole("button", { name: "Visualize", exact: true }).click();
-  // The existing mobile layout places the diagram outside the initial viewport.
-  // Use the editor's recenter control, as in the deployed app.
-  await page.getByRole("button", { name: "Scroll back to content" }).click();
+  await expect(
+    page.getByRole("button", { name: "Scroll back to content" }),
+  ).toHaveCount(0);
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -280,4 +296,69 @@ test("keeps mobile navigation and visualization usable", async ({ page }) => {
       ),
     )
     .toBe(true);
+});
+
+test("sample menus keep one active choice and clear it after edits or uploads", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await page.selectOption("#sample-single-node", "simple-filter");
+  await page.selectOption("#sample-custom", "custom-wrapped-join");
+  await expect(page.locator("#sample-single-node")).toHaveValue("");
+  await expect(page.locator("#plan-input")).toHaveValue(
+    readFileSync(sampleDirectory + "custom/inferred_collect_left.sql", "utf8"),
+  );
+  await page.selectOption(
+    "#sample-distributed",
+    "distributed-count-distinct-union-time-ranges",
+  );
+  await expect(page.locator("#sample-custom")).toHaveValue("");
+  await expect(page.locator("#plan-input")).toHaveValue(
+    readFileSync(
+      sampleDirectory + "distributed/count_distinct_union_time_ranges.sql",
+      "utf8",
+    ),
+  );
+  await page.locator("#plan-input").fill("FilterExec: id@0 > 10");
+  await expect(page.locator("#sample-distributed")).toHaveValue("");
+  await page.selectOption("#sample-custom", "custom-unknown-operators");
+  await page
+    .locator("#plan-file-upload")
+    .setInputFiles(sampleDirectory + "simple-filter.sql");
+  await expect(page.locator("#sample-custom")).toHaveValue("");
+  await expect(page.locator("#plan-input")).toHaveValue(
+    readFileSync(sampleDirectory + "simple-filter.sql", "utf8"),
+  );
+});
+
+test("all three sample menus and fitted diagrams work on narrow screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("./");
+  for (const [category, id] of [
+    ["single-node", "hash-join"],
+    ["custom", "custom-wrapped-join"],
+    ["distributed", "distributed-shuffle-partial-reduce"],
+  ]) {
+    await expect(page.locator(`#sample-${category}`)).toBeVisible();
+    await page.selectOption(`#sample-${category}`, id);
+    await visualize(page);
+    await expect(
+      page.getByRole("button", { name: "Scroll back to content" }),
+    ).toHaveCount(0);
+    const bounds = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      actionsBottom: document
+        .querySelector(
+          'button[title="Copy a link that opens this plan as a diagram"]',
+        )!
+        .getBoundingClientRect().bottom,
+      canvasTop: document
+        .querySelector(".planviz-excalidraw")!
+        .getBoundingClientRect().top,
+    }));
+    expect(bounds.width).toBeLessThanOrEqual(390);
+    expect(bounds.actionsBottom).toBeLessThanOrEqual(bounds.canvasTop);
+  }
 });

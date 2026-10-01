@@ -1,6 +1,7 @@
 // Plan Visualizer Types
 // Type definitions for the plan visualization feature
 
+import type { SamplePlan } from "../data/samples";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 
@@ -68,8 +69,8 @@ export interface PlanInputProps {
   /** Error message to display inline */
   error?: string | null;
 
-  /** Sample plans shown in the Load a sample menu */
-  samples?: ReadonlyArray<{ id: string; label: string; group: string }>;
+  /** Sample plans shown in the three category menus */
+  samples?: ReadonlyArray<SamplePlan>;
 
   /** Currently selected sample id, if the input still matches that sample */
   selectedSampleId?: string | null;
@@ -89,7 +90,7 @@ export interface ExcalidrawCanvasProps {
   /** Full scene (elements + appState) to render in the canvas */
   scene: ExcalidrawScene | null;
 
-  /** Fit an opened shared plan into the recipient's viewport. */
+  /** Fit each newly visualized plan into the viewport. */
   fitToContent?: boolean;
 
   /** Current theme (light/dark) */
