@@ -1,59 +1,27 @@
 # Plan Visualizer
 
-A graphical web application for visualizing Apache DataFusion physical execution plans as interactive Excalidraw diagrams. Convert execution plans into clear visualizations with color coding that highlights key properties like parallelism, sort order preservation, pushdown optimizations, and operator selection. Identify bottlenecks and performance improvement opportunities throughout the plan.
+Visualize Apache DataFusion physical execution plans as interactive, color-coded diagrams, powered by [plan-viz](https://github.com/NGA-TRAN/plan_viz) and Excalidraw.
 
-## Features
+**[Open the app](https://nga-tran.github.io/plan-visualizer/)**
 
-- **Color-Coded Visualization**: See key execution properties highlighted throughout the plan
-- **Performance Insights**: Identify bottlenecks such as lost parallelism or sort order, missing pushdown optimizations, and suboptimal operator selection
-- **Interactive Editing**: Edit plans directly in Excalidraw and save back to JSON
-- **Share a Plan**: Copy a link that includes the current plan text and opens its diagram automatically
-- **Export**: Export to PNG or SVG for documentation and presentations
-- **Collaboration**: Open the Excalidraw JSON in excalidraw.com for real-time collaborative editing
-- **Offline Support**: Works without internet connection using service workers and local storage
+- Paste a plan, upload or drop a text file, or choose from ten samples, then click **Visualize**.
+- Edit diagrams and export PNG, SVG, or Excalidraw JSON.
+- Click **Share** to copy a link that restores the plan text and automatically opens its diagram.
+- Use light/dark themes, desktop/mobile layouts, and offline access after the app is cached.
 
-## Try It Now
+Share links contain compressed plan text and need no backend or account. Manual diagram edits are saved through JSON export. Very large plans must be shared as text files.
 
-**[🚀 Use Online App](https://nga-tran.github.io/plan-visualizer/)**
+## Run locally
 
-Paste or upload a plain-text DataFusion physical execution plan (.sql, .txt, or similar) and watch it transform into an interactive Excalidraw diagram.
+Use Node.js 24 (the exact version is pinned in [.nvmrc](.nvmrc)).
 
-Click **Share** beside **Visualize** to copy a link to the current text. The recipient
-opens it in their browser to see the text and diagram immediately, including on mobile.
-Links point to the public app and contain compressed plan text in the URL fragment;
-no backend or account is needed. They share the text, not manual edits to the diagram.
-If clipboard access is blocked, the app shows a selectable link to copy manually.
-Plans exceeding 1 MiB of text or a 32,000-character link must be shared as text files.
+```bash
+npm ci
+npm run dev
+```
 
-![Plan Visualizer showing execution plan input and visual diagram output](PlanVisualizer.png)
+Open the URL printed by Vite (normally `http://localhost:5173/`).
 
-## Powered By
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks, sharing limits, and deployment. Merges to `master` deploy automatically to GitHub Pages after CI passes.
 
-This project is built using **[plan-viz](https://www.npmjs.com/package/plan-viz)** ([GitHub](https://github.com/NGA-TRAN/plan_viz)), an npm package that converts Apache DataFusion physical execution plans into Excalidraw-JSON. The library uses color coding to highlight key properties and propagate them throughout the plan.
-
-Explore many example execution plans in the plan-viz [tests folder](https://github.com/NGA-TRAN/plan_viz/tree/master/tests) covering different DataFusion operators and patterns.
-
-New to query plans? See plan-viz's [Output Analysis](https://github.com/NGA-TRAN/plan_viz#output-analysis) section for examples on how to read them and determine if the plan is optimal.
-
-## Roadmap
-
-- **Interactive Query Builder**: Create tables, insert data, or link to existing files
-- **DataFusion Integration**: Run queries and generate EXPLAIN plans directly within the application
-- **Enhanced Visualization**: Additional diagram styles and customization options
-
-## Built With
-
-This project was developed using **[SpecKit](https://github.com/DINHDUY/spec-driven-ai-dev/blob/master/docs/AI-assisted%20Development%20with%20SpecKit.md)**, a specification-driven development framework that enables AI-assisted development through structured specifications and automated planning.
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started, including:
-
-- How to fork the repository
-- Development setup and workflow
-- Testing your changes locally
-- Submitting pull requests
-
-## License
-
-Licensed under the [MIT License](LICENSE).
+[MIT license](LICENSE) · [Report an issue](https://github.com/NGA-TRAN/plan-visualizer/issues)
