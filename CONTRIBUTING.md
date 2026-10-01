@@ -67,7 +67,7 @@ Start the development server with hot-reload:
 npm run dev
 ```
 
-The application will be available at `http://localhost:4174` (or the next available port).
+The application will be available at `http://localhost:5173/` (or the next available port shown by Vite).
 
 ### Building for Production
 
@@ -85,7 +85,7 @@ This command:
 
 ### Testing the Production Build Locally
 
-After building, preview the production build locally:
+Build and preview the production app locally:
 
 ```bash
 npm run preview
@@ -97,7 +97,7 @@ This command:
 - Builds the production bundle (`vite build`)
 - Starts a preview server (`vite preview`)
 
-The application will be available at **http://localhost:4174/** (or the next available port).
+The preview will be available at **http://localhost:4173/** (or the next available port shown by Vite).
 
 > **Note**: The preview server serves the production build, which is useful for testing how the app will behave when deployed.
 
@@ -109,7 +109,7 @@ The application will be available at **http://localhost:4174/** (or the next ava
 
 ### Automated browser checks
 
-After building, install the test browser once and run the regression suite:
+Install the test browser once, then build and run the regression suite:
 
 ```bash
 npx playwright install chromium
@@ -124,9 +124,32 @@ styles, exports, and the first visualization after an offline reload. Sharing
 checks cover clipboard copying and fallback, exact text round-trips, automatic
 diagrams on desktop/mobile, damaged or oversized links, and edits during loading.
 
-For deployment-path verification, use `GITHUB_PAGES=true` for both the build
-and test commands. CI runs lint, TypeScript checks, the Pages build, and
-these browser tests before publishing.
+For deployment-path verification:
+
+```bash
+GITHUB_PAGES=true npm run build
+GITHUB_PAGES=true npm run test:e2e
+```
+
+### Sharing
+
+Share links always target the public app, including when copied from localhost.
+To test a local change, replace `https://nga-tran.github.io/plan-visualizer/` in
+the copied link with your local app URL, keeping the entire `#plan=…` fragment.
+Opening the link restores the text and renders the diagram automatically.
+
+Links use the versioned `#plan=v1.` format: gzip-compressed UTF-8 text encoded as
+URL-safe base64. They include the current plan text, not manual diagram edits.
+The limits are 1 MiB of decoded text and 32,000 URL characters; file uploads allow
+up to 5 MiB. Clipboard failures show a link for manual copying.
+
+### Deployment
+
+Pull requests targeting `master` run lint, TypeScript checks, a GitHub Pages
+build, and browser tests. After merge, the workflow repeats those checks and
+automatically publishes to [GitHub Pages](https://nga-tran.github.io/plan-visualizer/).
+Check that the deployment job succeeds before treating a change as live.
+The workflow is defined in [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
 ### Browser data and bundle maintenance
 
@@ -182,11 +205,10 @@ Before submitting:
 2. **Build and preview** to ensure the production build works:
 
    ```bash
-   npm run build
    npm run preview
    ```
 
-   Then test at http://localhost:4174/
+   Then open the URL printed by Vite (normally http://localhost:4173/).
 
 3. **Run type checking**:
 
@@ -195,9 +217,12 @@ Before submitting:
    ```
 
 4. **Run linting**:
+
    ```bash
    npm run lint
    ```
+
+5. **Run browser tests** using the build and commands under Automated browser checks.
 
 ### Commit Your Changes
 
@@ -205,16 +230,16 @@ Write clear, descriptive commit messages:
 
 ```bash
 git add .
-git commit -m "Add: description of your changes"
+git commit -m "feat: describe the new behavior"
 ```
 
 Use conventional commit prefixes when appropriate:
 
-- `Add:` for new features
-- `Fix:` for bug fixes
-- `Update:` for updates to existing features
-- `Refactor:` for code refactoring
-- `Docs:` for documentation changes
+- `feat:` for features
+- `fix:` for bug fixes
+- `chore:` for maintenance
+- `refactor:` for code refactoring
+- `docs:` for documentation changes
 
 ### Keep Your Fork Updated
 
@@ -222,16 +247,16 @@ Before creating a pull request, sync your fork with the upstream repository:
 
 ```bash
 git fetch upstream
-git checkout main
-git merge upstream/main
-git push origin main
+git checkout master
+git merge upstream/master
+git push origin master
 ```
 
 Then update your feature branch:
 
 ```bash
 git checkout feature/your-feature-name
-git merge main
+git merge master
 ```
 
 ## Submitting Changes
@@ -248,7 +273,7 @@ git push origin feature/your-feature-name
 
 1. Go to your fork on GitHub
 2. Click "New Pull Request"
-3. Select your branch
+3. Select your branch and target `NGA-TRAN/plan-visualizer:master`
 4. Fill out the pull request template (if available) with:
    - Description of changes
    - Related issues (if any)
@@ -282,8 +307,9 @@ plan-visualizer/
 │   ├── store/            # State management
 │   └── types/            # TypeScript type definitions
 ├── public/               # Static assets
-├── dist/                 # Production build output
-└── specs/                # Project specifications
+├── tests/                # Playwright browser regression tests
+├── dist/                 # Generated production build output
+└── specs/                # Historical design and planning documents
 ```
 
 ## Questions?
