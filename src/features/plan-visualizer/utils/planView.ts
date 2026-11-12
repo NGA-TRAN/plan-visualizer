@@ -19,7 +19,7 @@ export interface PlanViewSettings {
   metric: string;
   palette: PaletteId;
   interpretation: ProfileOptions;
-  /** Older links without this preference use automatic interpretation. */
+  /** Preserve old shared views; new interactions use automatic interpretation. */
   automaticInterpretation?: boolean;
   cohort?: string;
   input?: InputSelection;

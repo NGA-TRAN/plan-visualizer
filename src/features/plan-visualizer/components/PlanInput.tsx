@@ -200,7 +200,9 @@ export function PlanInput({
               ? "Selected metric: Not reported in this plan."
               : metricReport.status === "cohort-required"
                 ? "Choose a comparison group, then click Visualize."
-                : "Displayed diagram: values are shown as reported. Review Metric interpretation, then click Visualize to update it."}
+                : viewSettings.automaticInterpretation === false
+                  ? "This shared view uses saved manual metric settings. Click Visualize to use automatic interpretation."
+                  : "Displayed diagram: numeric comparison is unavailable for this metric. Values are shown as reported."}
           </p>
         )}
       {diagnostics.length > 0 && (

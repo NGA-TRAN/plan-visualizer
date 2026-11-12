@@ -103,7 +103,10 @@ export function PlanVisualizerPage() {
 
     // T009: Wire up conversion
     cancelSharedLoad();
-    const result = await convert(inputText, viewSettings);
+    const result = await convert(inputText, {
+      ...viewSettings,
+      automaticInterpretation: true,
+    });
     if (!result) return;
 
     if (result.success) {
@@ -133,13 +136,11 @@ export function PlanVisualizerPage() {
         ...previous,
         cohort: undefined,
         input: undefined,
-        interpretation:
-          selectedSampleId || previous.automaticInterpretation !== false
-            ? {}
-            : previous.interpretation,
+        automaticInterpretation: true,
+        interpretation: {},
       }));
     },
-    [cancelSharedLoad, selectedSampleId],
+    [cancelSharedLoad],
   );
 
   const handleSelectSample = useCallback(
@@ -153,6 +154,7 @@ export function PlanVisualizerPage() {
       setViewSettings((previous) => ({
         ...previous,
         interpretation: sample.interpretation ?? {},
+        automaticInterpretation: true,
         cohort: undefined,
         input: undefined,
       }));
@@ -178,6 +180,7 @@ export function PlanVisualizerPage() {
       setViewSettings((previous) => ({
         ...previous,
         interpretation: {},
+        automaticInterpretation: true,
         cohort: undefined,
         input: undefined,
       }));
@@ -188,7 +191,7 @@ export function PlanVisualizerPage() {
   const handleViewSettingsChange = useCallback(
     (settings: PlanViewSettings) => {
       cancelSharedLoad();
-      setViewSettings(settings);
+      setViewSettings({ ...settings, automaticInterpretation: true });
     },
     [cancelSharedLoad],
   );

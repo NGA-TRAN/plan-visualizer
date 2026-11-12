@@ -2,10 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { PlanInspection, PlanViewCapabilities } from "plan-viz";
 import { cn } from "@/shared/utils/cn";
 import { DISPLAY_OPTIONS, type PlanViewSettings } from "../utils/planView";
-import {
-  suggestMetricInterpretation,
-  type InterpretationControl,
-} from "../utils/metricInterpretation";
 
 interface PlanViewControlsProps {
   plan: string;
@@ -43,9 +39,7 @@ export function PlanViewControls({
     key: string;
     result?: PlanInspection;
     error?: string;
-    missingInterpretation?: InterpretationControl[];
   } | null>(null);
-  const [interpretationOpen, setInterpretationOpen] = useState(false);
   const key = JSON.stringify([
     plan,
     settings.interpretation,
@@ -67,27 +61,11 @@ export function PlanViewControls({
             input: settings.input,
           });
           if (cancelled) return null;
-          setInspected({ key, result });
-          const suggestion =
-            settings.automaticInterpretation === false
-              ? await suggestMetricInterpretation(
-                  library.inspectPlan,
-                  plan,
-                  {
-                    display: settings.display,
-                    metric: settings.metric,
-                    interpretation: settings.interpretation,
-                    input: settings.input,
-                  },
-                  result,
-                  capabilities,
-                )
-              : null;
-          return { result, missingInterpretation: suggestion?.controls ?? [] };
+          return result;
         })
         .then(
-          (inspected) => {
-            if (!cancelled && inspected) setInspected({ key, ...inspected });
+          (result) => {
+            if (!cancelled && result) setInspected({ key, result });
           },
           (error: unknown) => {
             if (!cancelled)
@@ -111,21 +89,11 @@ export function PlanViewControls({
     settings.interpretation,
     settings.input,
     settings.metric,
-    settings.automaticInterpretation,
     key,
   ]);
 
   const inspection = inspected?.key === key ? inspected.result : undefined;
   const error = inspected?.key === key ? inspected.error : undefined;
-  const missingInterpretation =
-    inspected?.key === key ? (inspected.missingInterpretation ?? []) : [];
-  const needsInterpretation =
-    settings.display === "heatmap" &&
-    settings.automaticInterpretation === false &&
-    missingInterpretation.length > 0;
-  useEffect(() => {
-    if (needsInterpretation) setInterpretationOpen(true);
-  }, [needsInterpretation]);
   const available =
     inspection?.metrics.filter(
       (m) => m.present && m.placement === "operator",
@@ -343,132 +311,9 @@ export function PlanViewControls({
           )}
           {isSample && (
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Synthetic sample · uses the documented metric interpretation
-              preset.
+              Sample measurements are synthetic.
             </p>
           )}
-          {needsInterpretation && (
-            <div
-              role="status"
-              className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
-            >
-              <p className="font-medium">Heatmap setup required</p>
-              <p id="heatmap-setup-description" className="mt-1">
-                Choose <strong>{missingInterpretation.join(" and ")}</strong>{" "}
-                below, then click <strong>Visualize</strong>. Select settings
-                that match the source of your plan.
-              </p>
-            </div>
-          )}
-          <details
-            open={interpretationOpen}
-            onToggle={(event) =>
-              setInterpretationOpen(event.currentTarget.open)
-            }
-            className="text-xs text-gray-500 dark:text-gray-400"
-          >
-            <summary className="cursor-pointer w-fit">
-              Advanced metric interpretation
-            </summary>
-            <label className="mt-2 flex items-center gap-2 cursor-pointer w-fit">
-              <input
-                type="checkbox"
-                checked={settings.automaticInterpretation !== false}
-                onChange={(event) =>
-                  change({
-                    automaticInterpretation: event.target.checked,
-                    interpretation: event.target.checked
-                      ? {}
-                      : settings.interpretation,
-                    cohort: undefined,
-                  })
-                }
-              />
-              Choose interpretation automatically
-            </label>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className={fieldClass}>
-                Metric definitions
-                <select
-                  aria-describedby={
-                    needsInterpretation &&
-                    missingInterpretation.includes("Metric definitions")
-                      ? "heatmap-setup-description"
-                      : undefined
-                  }
-                  className={cn(
-                    selectClass,
-                    needsInterpretation &&
-                      missingInterpretation.includes("Metric definitions") &&
-                      "border-amber-500 dark:border-amber-500",
-                  )}
-                  value={settings.interpretation.metricProfile ?? ""}
-                  onChange={(e) =>
-                    change({
-                      automaticInterpretation: false,
-                      interpretation: {
-                        ...settings.interpretation,
-                        metricProfile: e.target.value || undefined,
-                      },
-                      cohort: undefined,
-                    })
-                  }
-                >
-                  <option value="">Reported values only</option>
-                  {(capabilities?.profiles ?? [])
-                    .filter((p) => p.component === "metric")
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.label}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <label className={fieldClass}>
-                Task metrics
-                <select
-                  aria-describedby={
-                    needsInterpretation &&
-                    missingInterpretation.includes("Task metrics")
-                      ? "heatmap-setup-description"
-                      : undefined
-                  }
-                  className={cn(
-                    selectClass,
-                    needsInterpretation &&
-                      missingInterpretation.includes("Task metrics") &&
-                      "border-amber-500 dark:border-amber-500",
-                  )}
-                  value={settings.interpretation.exportProfile ?? ""}
-                  onChange={(e) =>
-                    change({
-                      automaticInterpretation: false,
-                      interpretation: {
-                        ...settings.interpretation,
-                        exportProfile: e.target.value || undefined,
-                      },
-                      cohort: undefined,
-                    })
-                  }
-                >
-                  <option value="">Unspecified format</option>
-                  {(capabilities?.profiles ?? [])
-                    .filter((p) => p.component === "exporter")
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.label}
-                      </option>
-                    ))}
-                </select>
-              </label>
-            </div>
-            <p className="mt-2">
-              Automatic mode uses supported DataFusion metric and distributed
-              task definitions when they enable comparison. These are assumed
-              defaults about the plan’s source. Change a dropdown to override
-              them manually.
-            </p>
-          </details>
         </>
       )}
     </div>

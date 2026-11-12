@@ -125,10 +125,10 @@ checks cover clipboard copying and fallback, exact text round-trips, automatic
 diagrams on desktop/mobile, damaged or oversized links, and edits during loading.
 Metrics checks cover both synthetic samples in all three display modes, all
 palettes, metric selection, exported scenes, view sharing, missing measurements,
-manual interpretation settings, zero versus missing values, comparison-group
+saved interpretation settings, zero versus missing values, comparison-group
 sharing and resets, and stale asynchronous conversions.
 Interpretation checks exercise automatic defaults for pasted, uploaded and shared
-distributed metric maps, manual overrides and setup guidance, mobile layouts,
+distributed metric maps, legacy-link compatibility, mobile layouts,
 and absent or invalid measurements that must remain uncolored.
 
 For deployment-path verification:
@@ -138,6 +138,12 @@ GITHUB_PAGES=true npm run build
 GITHUB_PAGES=true npm run test:e2e
 ```
 
+`test:e2e` uses the existing `dist/` build; it does not rebuild the app. Keep
+`GITHUB_PAGES` the same for the build and tests. Playwright checks the preview's
+asset paths before starting tests and reports a mismatched build immediately.
+Run these suites sequentially, and do not rebuild the app during a test run:
+both modes share `dist/`, port 4177, and `test-results/`.
+
 ### Sharing
 
 Share links always target the public app, including when copied from localhost.
@@ -146,9 +152,11 @@ the copied link with your local app URL, keeping the entire `#plan=…` fragment
 Opening the link restores the text, display mode, metric, palette, interpretation
 assumptions, and any selected comparison group or physical variant, then renders
 the diagram automatically.
-Automatic/manual interpretation preference and the definitions applied during
-visualization are also shared. Older v2 links without the preference use automatic
-interpretation; v1 text-only links still open in Normal mode.
+Definitions applied during visualization are also shared. Older v2 links restore
+their saved automatic/manual preference for the initial drawing; clicking
+Visualize or loading a new input uses automatic interpretation. Older v2 links
+without a preference use automatic interpretation, and v1 text-only links still
+open in Normal mode. The UI does not expose producer-profile dropdowns.
 
 New links use `#plan=v2.`: gzip-compressed UTF-8 JSON containing `plan` and
 `settings`, encoded as URL-safe base64. Legacy `#plan=v1.` compressed text links

@@ -4,6 +4,7 @@ const base = process.env.GITHUB_PAGES === "true" ? "/plan-visualizer/" : "/";
 
 export default defineConfig({
   testDir: "./tests",
+  globalSetup: "./tests/verify-test-build.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,

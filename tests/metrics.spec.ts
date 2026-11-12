@@ -58,18 +58,6 @@ async function render(page: Page, expectedText: string) {
   await expect(page.locator("#plan-input")).not.toHaveClass(/border-red-300/);
 }
 
-async function useManualInterpretation(page: Page) {
-  await page
-    .getByText("Advanced metric interpretation", { exact: true })
-    .click();
-  await page
-    .getByRole("checkbox", {
-      name: "Choose interpretation automatically",
-      exact: true,
-    })
-    .uncheck();
-}
-
 async function exportScene(page: Page) {
   await page.getByTestId("main-menu-trigger").click();
   await page.getByText("Save to...", { exact: true }).click();
@@ -169,7 +157,8 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
       );
       expect(missing?.containerId).toBeTruthy();
       expect(
-        scene.elements.find((e) => e.id === missing!.containerId)?.backgroundColor,
+        scene.elements.find((e) => e.id === missing!.containerId)
+          ?.backgroundColor,
       ).not.toBe("#ffffff");
       if (palette === "spectrum") {
         const positiveFloor = scene.elements.find(
@@ -180,9 +169,9 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
           e.groupIds.includes(positiveFloor!.groupIds[0]),
         );
         expect(legend.filter((e) => e.type === "rectangle")).toHaveLength(7);
-        expect(legend.filter((e) => e.type === "text").map((e) => e.text)).toEqual(
-          ["0", ">0", "20%", "40%", "60%", "80%", "100%"],
-        );
+        expect(
+          legend.filter((e) => e.type === "text").map((e) => e.text),
+        ).toEqual(["0", ">0", "20%", "40%", "60%", "80%", "100%"]);
       }
       expect(
         scene.elements.some(
@@ -214,12 +203,9 @@ test("missing metrics stay selected, and pasted plans do not inherit sample assu
   await page
     .locator("#plan-input")
     .fill("ProjectionExec: expr=[item@0 as item]\n  EmptyExec");
-  await page
-    .getByText("Advanced metric interpretation", { exact: true })
-    .click();
   await expect(
-    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
-  ).toHaveValue("");
+    page.getByText("Advanced metric interpretation", { exact: true }),
+  ).toHaveCount(0);
   await render(page, "Not reported");
   await expect(
     page.getByRole("radio", { name: "Labels + heatmap", exact: true }),
@@ -229,7 +215,7 @@ test("missing metrics stay selected, and pasted plans do not inherit sample assu
   ).toHaveText("Selected metric: Not reported in this plan.");
 });
 
-test("manual metric interpretation enables comparison and keeps zero distinct from missing", async ({
+test("automatic count interpretation keeps zero distinct from missing", async ({
   page,
 }) => {
   await page.goto("./");
@@ -244,23 +230,6 @@ test("manual metric interpretation enables comparison and keeps zero distinct fr
   await page
     .getByRole("combobox", { name: "Metric", exact: true })
     .selectOption("output_rows");
-  await useManualInterpretation(page);
-  await render(page, "output_rows — incomparable");
-  const raw = await exportScene(page);
-  expect(raw.elements.some((e) => e.backgroundColor === "#ffc078")).toBe(false);
-  expect(raw.elements.some((e) => e.text === "0 (raw)")).toBe(true);
-  const definitions = page.getByRole("combobox", {
-    name: "Metric definitions",
-    exact: true,
-  });
-  await expect(definitions).toBeVisible();
-  const setup = page
-    .getByRole("status")
-    .filter({ hasText: "Heatmap setup required" });
-  await expect(setup).toContainText("Choose Metric definitions below");
-  await expect(setup).not.toContainText("Task metrics");
-  await expect(definitions).toHaveValue("");
-  await definitions.selectOption("datafusion-7865139");
   await render(page, "output_rows — ready");
   const scene = await exportScene(page);
   const projection = scene.elements.find((e) => e.text === "ProjectionExec");
@@ -299,23 +268,18 @@ test("comparison groups are selected explicitly, shared, and reset after metric 
   await page
     .getByRole("radio", { name: "Labels + heatmap", exact: true })
     .check();
-  await useManualInterpretation(page);
-  await expect(
-    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("combobox", { name: "Metric definitions", exact: true })
-    .selectOption("datafusion-7865139");
-  await page
-    .getByRole("combobox", { name: "Task metrics", exact: true })
-    .selectOption("distributed-b32ee66");
+  await render(page, "Exec");
   const group = page.getByRole("combobox", {
     name: "Comparison group",
     exact: true,
   });
   await expect(group).toHaveValue("");
-  await render(page, "elapsed_compute — cohort-required");
   const unselected = await exportScene(page);
+  expect(
+    unselected.elements.some((e) =>
+      e.text?.includes("elapsed_compute — cohort-required"),
+    ),
+  ).toBe(true);
   expect(unselected.elements.some((e) => e.backgroundColor === "#ffc078")).toBe(
     false,
   );
@@ -405,21 +369,12 @@ for (const inputMethod of ["paste", "upload"] as const) {
         (e) => bodies.has(e.id) && e.backgroundColor === "#ffc078",
       ),
     ).toBe(true);
-    await page
-      .getByText("Advanced metric interpretation", { exact: true })
-      .click();
     await expect(
-      page.getByRole("checkbox", {
-        name: "Choose interpretation automatically",
-        exact: true,
-      }),
-    ).toBeChecked();
-    await expect(
-      page.getByRole("combobox", { name: "Metric definitions", exact: true }),
-    ).toHaveValue("datafusion-7865139");
+      page.getByText("Advanced metric interpretation", { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("combobox", { name: "Task metrics", exact: true }),
-    ).toHaveValue("distributed-b32ee66");
+    ).toHaveCount(0);
   });
 }
 
@@ -447,15 +402,6 @@ test("automatic interpretation resolves mixed scalar and task metrics in one vis
     exact: true,
   });
   await expect(group.locator("option")).toHaveCount(3);
-  await page
-    .getByText("Advanced metric interpretation", { exact: true })
-    .click();
-  await expect(
-    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
-  ).toHaveValue("datafusion-7865139");
-  await expect(
-    page.getByRole("combobox", { name: "Task metrics", exact: true }),
-  ).toHaveValue("distributed-b32ee66");
   await group.selectOption({
     label: "output_batches / instance / assumed-profile",
   });
@@ -529,7 +475,7 @@ test("older shared heatmaps with empty settings use automatic interpretation", a
   ).toHaveValue("purple");
 });
 
-test("shared manual interpretation stays manual and can switch back to automatic", async ({
+test("legacy saved settings are restored and Visualize applies automatic interpretation", async ({
   page,
   context,
 }) => {
@@ -546,16 +492,16 @@ test("shared manual interpretation stays manual and can switch back to automatic
     "./#plan=v2." +
       gzipSync(JSON.stringify({ plan, settings })).toString("base64url"),
   );
-  const setup = page
+  const savedSettingsNotice = page
     .getByRole("status")
-    .filter({ hasText: "Heatmap setup required" });
-  await expect(setup).toContainText("Metric definitions and Task metrics");
+    .filter({ hasText: "saved manual metric settings" });
+  await expect(savedSettingsNotice).toContainText("Click Visualize");
+  await expect(
+    page.getByText("Advanced metric interpretation", { exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("combobox", { name: "Metric definitions", exact: true }),
-  ).toHaveValue("");
-  await expect(
-    page.getByRole("combobox", { name: "Task metrics", exact: true }),
-  ).toHaveValue("");
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Share", exact: true }).click();
   await expect(
     page.getByText("Plan link copied!", { exact: true }).first(),
@@ -568,21 +514,26 @@ test("shared manual interpretation stays manual and can switch back to automatic
   );
   expect(payload.settings.automaticInterpretation).toBe(false);
   expect(payload.settings.interpretation).toEqual({});
-  await page
-    .getByRole("checkbox", {
-      name: "Choose interpretation automatically",
-      exact: true,
-    })
-    .check();
-  await expect(setup).toHaveCount(0);
   await render(page, "Exec");
   const scene = await exportScene(page);
   expect(
     scene.elements.some((e) => e.text?.includes("output_batches — ready")),
   ).toBe(true);
+  await expect(savedSettingsNotice).toHaveCount(0);
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect
+    .poll(async () => {
+      const updated = await page.evaluate(() => navigator.clipboard.readText());
+      return JSON.parse(
+        gunzipSync(
+          Buffer.from(new URL(updated).hash.slice(9), "base64url"),
+        ).toString(),
+      ).settings.automaticInterpretation;
+    })
+    .toBe(true);
 });
 
-test("absent and invalid metrics do not suggest interpretation settings", async ({
+test("absent and invalid metrics report why comparison is unavailable", async ({
   page,
 }) => {
   await page.goto("./");
@@ -601,6 +552,19 @@ test("absent and invalid metrics do not suggest interpretation settings", async 
     await expect(
       page.getByRole("combobox", { name: "Metric definitions", exact: true }),
     ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("status")
+        .filter({
+          hasText: plan.includes("NaN")
+            ? "numeric comparison is unavailable"
+            : "Not reported",
+        }),
+    ).toBeVisible();
+    const scene = await exportScene(page);
+    expect(
+      scene.elements.some((element) => element.backgroundColor === "#ffc078"),
+    ).toBe(false);
   }
 });
 
@@ -663,7 +627,9 @@ for (const palette of ["blue", "spectrum"] as const) {
       await expect(
         recipient.getByRole("combobox", { name: "Color", exact: true }),
       ).toHaveValue(palette);
-      await expect(recipient.locator(".excalidraw canvas").first()).toBeVisible();
+      await expect(
+        recipient.locator(".excalidraw canvas").first(),
+      ).toBeVisible();
       await expect(recipient.getByRole("alert")).toHaveCount(0);
       const scene = await exportScene(recipient);
       expect(
