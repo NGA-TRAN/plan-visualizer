@@ -102,16 +102,16 @@ test("renders all samples, uploaded files, dropped files and pasted text", async
   page,
 }) => {
   await page.goto("./");
-  const samples = await page
-    .locator('select[id^="sample-"] option')
-    .evaluateAll((options) =>
-      options
-        .map((option) => ({
-          id: (option as HTMLOptionElement).value,
-          menu: option.closest("select")!.id,
-        }))
-        .filter((option) => option.id),
-    );
+  const sampleOptions = page.locator('select[id^="sample-"] option');
+  await expect(sampleOptions).toHaveCount(25);
+  const samples = await sampleOptions.evaluateAll((options) =>
+    options
+      .map((option) => ({
+        id: (option as HTMLOptionElement).value,
+        menu: option.closest("select")!.id,
+      }))
+      .filter((option) => option.id),
+  );
   expect(samples).toHaveLength(21);
   for (const sample of samples) {
     await page.selectOption(`#${sample.menu}`, sample.id);
