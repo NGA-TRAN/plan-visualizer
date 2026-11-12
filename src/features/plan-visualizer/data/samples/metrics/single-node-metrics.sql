@@ -1,0 +1,10 @@
+SortExec: TopK(fetch=10), expr=[orders@1 DESC NULLS LAST, region@0 ASC NULLS LAST], preserve_partitioning=[false], metrics=[elapsed_compute=1ms, output_rows=10, output_batches=1, output_bytes=160 B]
+  ProjectionExec: expr=[region@0 as region, count(Int64(1))@1 as orders], metrics=[elapsed_compute=0ns, output_rows=20, output_batches=1, output_bytes=320 B]
+    AggregateExec: mode=Final, gby=[region@0 as region], aggr=[count(Int64(1))], metrics=[elapsed_compute=2ms, output_rows=20, output_batches=1, output_bytes=320 B, peak_mem_used=8.0 KB, spill_count=0, spilled_bytes=0 B, spilled_rows=0]
+      CoalescePartitionsExec
+        AggregateExec: mode=Partial, gby=[region@0 as region], aggr=[count(Int64(1))], metrics=[elapsed_compute=8ms, output_rows=30, output_batches=2, output_bytes=480 B, peak_mem_used=64.0 KB, spill_count=0, spilled_bytes=0 B, spilled_rows=0]
+          HashJoinExec: mode=CollectLeft, join_type=Inner, on=[(customer_id@0, customer_id@0)], projection=[region@1], metrics=[elapsed_compute=45ms, output_rows=15000, output_batches=2, output_bytes=120000 B, build_mem_used=128.0 KB]
+            FilterExec: active@2 = true, projection=[customer_id@0, region@1], metrics=[elapsed_compute=2ms, output_rows=1500, output_batches=1, output_bytes=24000 B]
+              DataSourceExec: file_groups={1 group: [[fixtures/customers/customers.parquet]]}, projection=[customer_id, region, active], file_type=parquet, metrics=[elapsed_compute=3ms, output_rows=2000, output_batches=1, output_bytes=34000 B]
+            FilterExec: status@1 = completed, projection=[customer_id@0], metrics=[elapsed_compute=6ms, output_rows=18000, output_batches=4, output_bytes=144000 B]
+              DataSourceExec: file_groups={2 groups: [[fixtures/orders/orders-0.parquet], [fixtures/orders/orders-1.parquet]]}, projection=[customer_id, status], file_type=parquet, metrics=[elapsed_compute=18ms, output_rows=24000, output_batches=4, output_bytes=384000 B]

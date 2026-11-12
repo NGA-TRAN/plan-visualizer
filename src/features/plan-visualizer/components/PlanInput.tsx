@@ -8,6 +8,7 @@ import { cn } from "@/shared/utils/cn";
 import type { PlanInputProps } from "../types";
 import { SampleMenus } from "./SampleMenus";
 import { SharePlanButton } from "./SharePlanButton";
+import { PlanViewControls } from "./PlanViewControls";
 
 export function PlanInput({
   value,
@@ -19,6 +20,11 @@ export function PlanInput({
   onSelectSample,
   loadedFileName = null,
   onUploadFile,
+  viewSettings,
+  onViewSettingsChange,
+  isLoading = false,
+  metricReport,
+  diagnostics = [],
 }: PlanInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -173,8 +179,43 @@ export function PlanInput({
         </div>
       )}
 
+      <PlanViewControls
+        plan={value}
+        settings={viewSettings}
+        onChange={onViewSettingsChange}
+        isSample={samples.some(
+          (s) => s.id === selectedSampleId && s.category === "metrics",
+        )}
+      />
+      {metricReport &&
+        metricReport.status !== "ready" &&
+        metricReport.status !== "off" && (
+          <p
+            role="status"
+            className="mt-2 text-xs text-gray-600 dark:text-gray-300"
+          >
+            {metricReport.status === "not-reported"
+              ? "Selected metric: Not reported in this plan."
+              : metricReport.status === "cohort-required"
+                ? "Choose a comparison group, then click Visualize."
+                : "Values are shown as reported. Numeric comparison is unavailable; check Metric interpretation."}
+          </p>
+        )}
+      {diagnostics.length > 0 && (
+        <details className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+          <summary className="cursor-pointer">
+            Plan notes ({diagnostics.length})
+          </summary>
+          <ul className="mt-1 list-disc pl-4">
+            {diagnostics.map((message, index) => (
+              <li key={index}>{message}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {/* Actions */}
-      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
+      <div className="mt-3 sm:mt-4 flex shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
         <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
           Press{" "}
           <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">
@@ -184,13 +225,13 @@ export function PlanInput({
           <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">
             Enter
           </kbd>{" "}
-          to visualize
+          to visualize with selected settings
         </p>
         <div className="flex gap-2">
-          <SharePlanButton plan={value} />
+          <SharePlanButton plan={value} settings={viewSettings} />
           <Button
             onClick={onVisualize}
-            isLoading={false}
+            isLoading={isLoading}
             className="gap-2 flex-1 sm:flex-none"
           >
             <Play className="w-4 h-4" />

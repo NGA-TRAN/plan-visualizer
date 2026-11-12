@@ -9,6 +9,12 @@ const sample = readFileSync(
 );
 const sharedHash = (text: string) =>
   "#plan=v1." + gzipSync(text).toString("base64url");
+const decodedPlan = (link: string) =>
+  JSON.parse(
+    gunzipSync(Buffer.from(new URL(link).hash.slice(9), "base64url")).toString(
+      "utf8",
+    ),
+  ).plan;
 const pageErrors = new WeakMap<Page, string[]>();
 
 declare global {
@@ -66,7 +72,7 @@ async function copyLink(page: Page) {
   ).toBeVisible();
   const link = await page.evaluate(() => navigator.clipboard.readText());
   expect(link).toMatch(
-    /^https:\/\/nga-tran\.github\.io\/plan-visualizer\/#plan=v1\.[A-Za-z0-9_-]+$/,
+    /^https:\/\/nga-tran\.github\.io\/plan-visualizer\/#plan=v2\.[A-Za-z0-9_-]+$/,
   );
   expect(link.length).toBeLessThanOrEqual(32_000);
   return link;
@@ -88,11 +94,7 @@ test("shares exact Unicode text and opens it as a diagram in a fresh session", a
     "\n" + sample.replace("orders.parquet", "数据-#&+%?-café.parquet") + "\n  ";
   await page.locator("#plan-input").fill(text);
   const link = await copyLink(page);
-  expect(
-    gunzipSync(Buffer.from(new URL(link).hash.slice(9), "base64url")).toString(
-      "utf8",
-    ),
-  ).toBe(text);
+  expect(decodedPlan(link)).toBe(text);
   const recipientContext = await browser.newContext();
   try {
     const recipient = await recipientContext.newPage();
@@ -111,11 +113,7 @@ test("shares exact Unicode text and opens it as a diagram in a fresh session", a
   const edited = sample.replace("100", "999");
   await page.locator("#plan-input").fill(edited);
   const updatedLink = await copyLink(page);
-  expect(
-    gunzipSync(
-      Buffer.from(new URL(updatedLink).hash.slice(9), "base64url"),
-    ).toString("utf8"),
-  ).toBe(edited);
+  expect(decodedPlan(updatedLink)).toBe(edited);
 });
 
 test("all sample categories fit in share links and render automatically", async ({
@@ -134,23 +132,19 @@ test("all sample categories fit in share links and render automatically", async 
         }))
         .filter((option) => option.id),
     );
-  expect(samples).toHaveLength(19);
+  expect(samples).toHaveLength(21);
   for (const sample of samples) {
     await page.selectOption(`#${sample.menu}`, sample.id);
     const text = await page.locator("#plan-input").inputValue();
     const link = await copyLink(page);
-    expect(
-      gunzipSync(
-        Buffer.from(new URL(link).hash.slice(9), "base64url"),
-      ).toString("utf8"),
-    ).toBe(text);
+    expect(decodedPlan(link)).toBe(text);
     await page.evaluate((hash) => {
       window.sharedPlanDrawnText = [];
       window.location.hash = hash;
     }, new URL(link).hash);
     await expectDiagram(page, "Exec");
     await expect(page.locator("#plan-input")).toHaveValue(text);
-    for (const menu of ["single-node", "custom", "distributed"]) {
+    for (const menu of ["single-node", "custom", "distributed", "metrics"]) {
       await expect(page.locator(`#sample-${menu}`)).toHaveValue("");
     }
   }
@@ -205,11 +199,7 @@ test("provides a selected copyable link when clipboard access is denied", async 
     end: selection.link.length,
     readOnly: true,
   });
-  expect(
-    gunzipSync(
-      Buffer.from(new URL(selection.link).hash.slice(9), "base64url"),
-    ).toString("utf8"),
-  ).toBe(sample);
+  expect(decodedPlan(selection.link)).toBe(sample);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(

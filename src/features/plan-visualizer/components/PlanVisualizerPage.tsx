@@ -15,6 +15,7 @@ import { savePlanToStorage } from "@/features/offline/services/storageManager";
 import { cn } from "@/shared/utils/cn";
 import { readPlanFileAsText } from "../utils/readPlanFile";
 import { readSharedPlan } from "../utils/sharePlan";
+import { DEFAULT_PLAN_VIEW, type PlanViewSettings } from "../utils/planView";
 
 export function PlanVisualizerPage() {
   const { hash } = useLocation();
@@ -25,18 +26,21 @@ export function PlanVisualizerPage() {
   const [inputText, setInputText] = useState("");
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
   const [loadedFileName, setLoadedFileName] = useState<string | null>(null);
+  const [viewSettings, setViewSettings] =
+    useState<PlanViewSettings>(DEFAULT_PLAN_VIEW);
   // Subscribe to theme changes from store - this ensures Excalidraw updates when theme toggle is clicked
   // The theme prop is passed to ExcalidrawCanvas which passes it to Excalidraw component
   const theme = useAppStore((state) => state.theme.resolved);
   const { notify } = useNotifications();
 
   // Conversion hook
-  const { state, convert, displayScene } = usePlanConverter();
+  const { state, convert, cancel, displayScene } = usePlanConverter();
 
   // Load shared plans once per URL change. Ignore stale decodes after edits,
   // navigation, or StrictMode effect cleanup.
   useEffect(() => {
     const requestId = ++sharedLoadId.current;
+    cancel();
     let cancelled = false;
     setShareLinkError(null);
     if (!hash.startsWith("#plan=")) {
@@ -45,14 +49,16 @@ export function PlanVisualizerPage() {
     }
     setIsLoadingSharedPlan(true);
     readSharedPlan(hash).then(
-      (plan) => {
-        if (cancelled || requestId !== sharedLoadId.current || plan === null)
+      async (shared) => {
+        if (cancelled || requestId !== sharedLoadId.current || shared === null)
           return;
-        setInputText(plan);
+        setInputText(shared.plan);
+        setViewSettings(shared.settings);
         setSelectedSampleId(null);
         setLoadedFileName(null);
-        convert(plan);
-        setIsLoadingSharedPlan(false);
+        await convert(shared.plan, shared.settings);
+        if (!cancelled && requestId === sharedLoadId.current)
+          setIsLoadingSharedPlan(false);
       },
       (error: unknown) => {
         if (cancelled || requestId !== sharedLoadId.current) return;
@@ -66,14 +72,16 @@ export function PlanVisualizerPage() {
     );
     return () => {
       cancelled = true;
+      cancel();
     };
-  }, [hash, convert]);
+  }, [hash, convert, cancel]);
 
   const cancelSharedLoad = useCallback(() => {
     ++sharedLoadId.current;
     setIsLoadingSharedPlan(false);
     setShareLinkError(null);
-  }, []);
+    cancel();
+  }, [cancel]);
 
   // Handle visualization
   const handleVisualize = useCallback(async () => {
@@ -84,13 +92,15 @@ export function PlanVisualizerPage() {
     }
 
     // T009: Wire up conversion
-    const result = convert(inputText);
+    cancelSharedLoad();
+    const result = await convert(inputText, viewSettings);
+    if (!result) return;
 
     if (result.success) {
       // Save plan to IndexedDB for offline access
       try {
-        if (displayScene) {
-          await savePlanToStorage(inputText.trim(), displayScene);
+        if (result.scene) {
+          await savePlanToStorage(inputText.trim(), result.scene);
         }
       } catch (error) {
         // Don't fail visualization if storage fails, just log it
@@ -100,7 +110,7 @@ export function PlanVisualizerPage() {
       // Error is already stored in state, also show toast
       notify.error(result.error || "Failed to convert plan");
     }
-  }, [inputText, convert, notify, displayScene]);
+  }, [inputText, viewSettings, convert, notify, cancelSharedLoad]);
 
   const handleInputChange = useCallback(
     (value: string) => {
@@ -108,8 +118,14 @@ export function PlanVisualizerPage() {
       setInputText(value);
       setSelectedSampleId(null);
       setLoadedFileName(null);
+      setViewSettings((previous) => ({
+        ...previous,
+        cohort: undefined,
+        input: undefined,
+        interpretation: selectedSampleId ? {} : previous.interpretation,
+      }));
     },
-    [cancelSharedLoad],
+    [cancelSharedLoad, selectedSampleId],
   );
 
   const handleSelectSample = useCallback(
@@ -120,6 +136,12 @@ export function PlanVisualizerPage() {
       setSelectedSampleId(id);
       setLoadedFileName(null);
       setInputText(sample.plan);
+      setViewSettings((previous) => ({
+        ...previous,
+        interpretation: sample.interpretation ?? {},
+        cohort: undefined,
+        input: undefined,
+      }));
     },
     [cancelSharedLoad],
   );
@@ -139,8 +161,22 @@ export function PlanVisualizerPage() {
       setSelectedSampleId(null);
       setLoadedFileName(result.fileName);
       setInputText(result.contents);
+      setViewSettings((previous) => ({
+        ...previous,
+        interpretation: {},
+        cohort: undefined,
+        input: undefined,
+      }));
     },
     [notify, cancelSharedLoad],
+  );
+
+  const handleViewSettingsChange = useCallback(
+    (settings: PlanViewSettings) => {
+      cancelSharedLoad();
+      setViewSettings(settings);
+    },
+    [cancelSharedLoad],
   );
 
   // Resizable panels hook
@@ -160,9 +196,14 @@ export function PlanVisualizerPage() {
             height: `${inputHeight * 100}%`,
             maxHeight: "80%",
           }}
-          className="flex-shrink-0 min-h-[380px] sm:min-h-[320px]"
+          className={cn(
+            "flex-shrink-0",
+            viewSettings.display === "off"
+              ? "min-h-[450px] sm:min-h-[390px] lg:min-h-[340px]"
+              : "min-h-[570px] sm:min-h-[470px] lg:min-h-[420px]",
+          )}
         >
-          <Card className="p-3 sm:p-4 h-full">
+          <Card className="p-3 sm:p-4 h-full overflow-y-auto">
             {isLoadingSharedPlan && (
               <p role="status" className="mb-2 text-sm text-gray-500">
                 Opening shared plan…
@@ -181,6 +222,11 @@ export function PlanVisualizerPage() {
               onSelectSample={handleSelectSample}
               loadedFileName={loadedFileName}
               onUploadFile={handleUploadFile}
+              viewSettings={viewSettings}
+              onViewSettingsChange={handleViewSettingsChange}
+              isLoading={state.status === "converting"}
+              metricReport={state.metricReport}
+              diagnostics={state.diagnostics}
             />
           </Card>
         </div>
@@ -215,7 +261,7 @@ export function PlanVisualizerPage() {
         </p>
         <p>
           Explore single-node plans, custom operators, and distributed execution
-          plans (alpha).
+          plans (beta), plus plans with metrics (alpha).
         </p>
       </div>
     </div>

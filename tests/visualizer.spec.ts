@@ -62,7 +62,7 @@ test.describe("startup budget", () => {
 
   test("loads the input UI without loading the editor", async ({ page }) => {
     await page.goto("./", { waitUntil: "networkidle" });
-    await expect(page.getByRole("combobox")).toHaveCount(3);
+    await expect(page.getByRole("combobox")).toHaveCount(4);
     await expect(
       page.getByRole("combobox", { name: "Single-node plans", exact: true }),
     ).toBeVisible();
@@ -71,11 +71,11 @@ test.describe("startup budget", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("combobox", {
-        name: "Distributed plans (alpha)",
+        name: "Distributed plans (beta)",
         exact: true,
       }),
     ).toBeVisible();
-    await expect(page.locator('select[id^="sample-"] option')).toHaveCount(22);
+    await expect(page.locator('select[id^="sample-"] option')).toHaveCount(25);
     await expect(
       page.getByText("No Plan Visualized", { exact: true }),
     ).toBeVisible();
@@ -112,7 +112,7 @@ test("renders all samples, uploaded files, dropped files and pasted text", async
         }))
         .filter((option) => option.id),
     );
-  expect(samples).toHaveLength(19);
+  expect(samples).toHaveLength(21);
   for (const sample of samples) {
     await page.selectOption(`#${sample.menu}`, sample.id);
     await visualize(page);
@@ -331,7 +331,7 @@ test("sample menus keep one active choice and clear it after edits or uploads", 
   );
 });
 
-test("all three sample menus and fitted diagrams work on narrow screens", async ({
+test("all four sample menus and fitted diagrams work on narrow screens", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -340,6 +340,7 @@ test("all three sample menus and fitted diagrams work on narrow screens", async 
     ["single-node", "hash-join"],
     ["custom", "custom-wrapped-join"],
     ["distributed", "distributed-shuffle-partial-reduce"],
+    ["metrics", "single-node-metrics"],
   ]) {
     await expect(page.locator(`#sample-${category}`)).toBeVisible();
     await page.selectOption(`#sample-${category}`, id);
@@ -347,18 +348,15 @@ test("all three sample menus and fitted diagrams work on narrow screens", async 
     await expect(
       page.getByRole("button", { name: "Scroll back to content" }),
     ).toHaveCount(0);
-    const bounds = await page.evaluate(() => ({
-      width: document.documentElement.scrollWidth,
-      actionsBottom: document
-        .querySelector(
-          'button[title="Copy a link that opens this plan as a diagram"]',
-        )!
-        .getBoundingClientRect().bottom,
-      canvasTop: document
-        .querySelector(".planviz-excalidraw")!
-        .getBoundingClientRect().top,
-    }));
-    expect(bounds.width).toBeLessThanOrEqual(390);
-    expect(bounds.actionsBottom).toBeLessThanOrEqual(bounds.canvasTop);
+    const actions = await page
+      .getByRole("button", { name: "Share", exact: true })
+      .boundingBox();
+    const canvas = await page.locator(".planviz-excalidraw").boundingBox();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(390);
+    expect(actions).not.toBeNull();
+    expect(canvas).not.toBeNull();
+    expect(actions!.y + actions!.height).toBeLessThanOrEqual(canvas!.y);
   }
 });

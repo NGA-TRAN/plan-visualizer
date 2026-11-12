@@ -24,11 +24,16 @@ import distributedPartialReduce from "./distributed/shuffle_partial_reduce.sql?r
 import distributedDynamicFilter from "./distributed/dynamic_filter_range_join.sql?raw";
 import distributedFullOuterJoin from "./distributed/full_outer_join_two_shuffles.sql?raw";
 import distributedUnionMetrics from "./distributed/union_five_branches_metrics.sql?raw";
+// Synthetic teaching examples copied unchanged from plan-viz 0.1.29 samples/.
+import distributedMetrics from "./metrics/distributed-metrics.sql?raw";
+import singleNodeMetrics from "./metrics/single-node-metrics.sql?raw";
+import type { ProfileOptions } from "plan-viz";
 
 export const SAMPLE_CATEGORIES = [
   { id: "single-node", label: "Single-node plans" },
   { id: "custom", label: "Custom plans" },
-  { id: "distributed", label: "Distributed plans", status: "alpha" },
+  { id: "distributed", label: "Distributed plans", status: "beta" },
+  { id: "metrics", label: "Plans with metrics", status: "alpha" },
 ] as const;
 
 export type SampleCategory = (typeof SAMPLE_CATEGORIES)[number]["id"];
@@ -41,9 +46,27 @@ export interface SamplePlan {
   category: SampleCategory;
   group?: SampleGroup;
   plan: string;
+  interpretation?: ProfileOptions;
 }
 
 export const SAMPLE_PLANS: SamplePlan[] = [
+  {
+    id: "distributed-metrics",
+    label: "Distributed: uneven tasks and aggregation",
+    category: "metrics",
+    plan: distributedMetrics,
+    interpretation: {
+      metricProfile: "datafusion-7865139",
+      exportProfile: "distributed-b32ee66",
+    },
+  },
+  {
+    id: "single-node-metrics",
+    label: "Single-node: join and top regions",
+    category: "metrics",
+    plan: singleNodeMetrics,
+    interpretation: { metricProfile: "datafusion-7865139" },
+  },
   {
     id: "simple-filter",
     label: "Simple Filter",

@@ -123,6 +123,10 @@ preview on port 4177 and cover all sample plans, file/text inputs, theme
 styles, exports, and the first visualization after an offline reload. Sharing
 checks cover clipboard copying and fallback, exact text round-trips, automatic
 diagrams on desktop/mobile, damaged or oversized links, and edits during loading.
+Metrics checks cover both synthetic samples in all three display modes, all
+palettes, metric selection, exported scenes, view sharing, missing measurements,
+manual interpretation settings, zero versus missing values, comparison-group
+sharing and resets, and stale asynchronous conversions.
 
 For deployment-path verification:
 
@@ -136,11 +140,15 @@ GITHUB_PAGES=true npm run test:e2e
 Share links always target the public app, including when copied from localhost.
 To test a local change, replace `https://nga-tran.github.io/plan-visualizer/` in
 the copied link with your local app URL, keeping the entire `#plan=…` fragment.
-Opening the link restores the text and renders the diagram automatically.
+Opening the link restores the text, display mode, metric, palette, interpretation
+assumptions, and any selected comparison group or physical variant, then renders
+the diagram automatically.
 
-Links use the versioned `#plan=v1.` format: gzip-compressed UTF-8 text encoded as
-URL-safe base64. They include the current plan text, not manual diagram edits.
-The limits are 1 MiB of decoded text and 32,000 URL characters; file uploads allow
+New links use `#plan=v2.`: gzip-compressed UTF-8 JSON containing `plan` and
+`settings`, encoded as URL-safe base64. Legacy `#plan=v1.` compressed text links
+remain supported and open in Normal mode. Links include the current input and
+selected settings; manual diagram edits require scene export.
+The limits are 1 MiB of decoded payload and 32,000 URL characters; file uploads allow
 up to 5 MiB. Clipboard failures show a link for manual copying.
 
 ### Deployment

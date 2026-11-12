@@ -3,15 +3,23 @@ import { Link } from "lucide-react";
 import { Button, Modal } from "@/shared/components";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
 import { createSharedPlanLink } from "../utils/sharePlan";
+import type { PlanViewSettings } from "../utils/planView";
 
-type PreparedLink = { plan: string; link?: string; error?: string };
+type PreparedLink = { key: string; link?: string; error?: string };
 
-export function SharePlanButton({ plan }: { plan: string }) {
+export function SharePlanButton({
+  plan,
+  settings,
+}: {
+  plan: string;
+  settings: PlanViewSettings;
+}) {
   const [prepared, setPrepared] = useState<PreparedLink | null>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [manualLink, setManualLink] = useState<string | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { notify } = useNotifications();
+  const key = JSON.stringify([plan, settings]);
 
   useEffect(() => {
     if (!plan.trim()) return;
@@ -19,14 +27,14 @@ export function SharePlanButton({ plan }: { plan: string }) {
     // Prepare before the click so clipboard access retains user activation,
     // including in Safari. Debounce edits to avoid compressing every keystroke.
     const timer = window.setTimeout(() => {
-      createSharedPlanLink(plan).then(
+      createSharedPlanLink(plan, settings).then(
         (link) => {
-          if (!cancelled) setPrepared({ plan, link });
+          if (!cancelled) setPrepared({ key, link });
         },
         (error: unknown) => {
           if (!cancelled)
             setPrepared({
-              plan,
+              key,
               error:
                 error instanceof Error
                   ? error.message
@@ -39,9 +47,9 @@ export function SharePlanButton({ plan }: { plan: string }) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [plan]);
+  }, [plan, settings, key]);
 
-  const ready = prepared?.plan === plan;
+  const ready = prepared?.key === key;
   const handleShare = async () => {
     if (!ready || !prepared) return;
     if (!prepared.link) {
@@ -73,7 +81,7 @@ export function SharePlanButton({ plan }: { plan: string }) {
         onClick={handleShare}
         disabled={!plan.trim() || !ready}
         isLoading={isCopying}
-        title="Copy a link that opens this plan as a diagram"
+        title="Copy a link with this plan and its selected display settings"
         leftIcon={<Link className="h-4 w-4" aria-hidden="true" />}
         className="flex-1 sm:flex-none"
       >

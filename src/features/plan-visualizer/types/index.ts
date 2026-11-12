@@ -4,6 +4,8 @@
 import type { SamplePlan } from "../data/samples";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
+import type { MetricViewReport } from "plan-viz";
+import type { PlanViewSettings } from "../utils/planView";
 
 export type { ExcalidrawElement };
 
@@ -35,6 +37,8 @@ export interface ConversionState {
 
   /** Previous successful scene (preserved on error for fallback) */
   previousScene: ExcalidrawScene | null;
+  metricReport: MetricViewReport | null;
+  diagnostics: string[];
 }
 
 /** Result returned by the plan converter */
@@ -50,6 +54,7 @@ export interface ConversionResult {
 
   /** Number of nodes in the plan (for performance warnings) */
   nodeCount?: number;
+  scene?: ExcalidrawScene;
 }
 
 /** Props for PlanInput component */
@@ -69,7 +74,12 @@ export interface PlanInputProps {
   /** Error message to display inline */
   error?: string | null;
 
-  /** Sample plans shown in the three category menus */
+  viewSettings: PlanViewSettings;
+  onViewSettingsChange: (settings: PlanViewSettings) => void;
+  metricReport?: MetricViewReport | null;
+  diagnostics?: string[];
+
+  /** Sample plans shown in the category menus */
   samples?: ReadonlyArray<SamplePlan>;
 
   /** Currently selected sample id, if the input still matches that sample */
@@ -105,6 +115,8 @@ export const initialConversionState: ConversionState = {
   previousElements: null,
   scene: null,
   previousScene: null,
+  metricReport: null,
+  diagnostics: [],
 };
 
 /** Maximum recommended nodes before showing performance warning */

@@ -14,7 +14,7 @@ export function SampleMenus({
 }: SampleMenusProps) {
   return (
     <div
-      className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-3"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 shrink-0"
       aria-label="Sample plans"
     >
       {SAMPLE_CATEGORIES.map((category) => {
@@ -33,12 +33,18 @@ export function SampleMenus({
         return (
           <label
             key={category.id}
-            className="grid grid-cols-[120px_minmax(0,1fr)] sm:grid-cols-1 items-center gap-2 sm:gap-1.5 min-w-0"
+            className="grid grid-cols-[140px_minmax(0,1fr)] sm:grid-cols-1 items-center gap-2 sm:gap-1.5 min-w-0"
           >
             <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
               {category.label}{" "}
               {"status" in category && (
-                <span className="text-amber-700 dark:text-amber-400">
+                <span
+                  className={
+                    category.status === "alpha"
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-amber-700 dark:text-amber-400"
+                  }
+                >
                   ({category.status})
                 </span>
               )}

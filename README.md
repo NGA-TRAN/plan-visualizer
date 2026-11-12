@@ -4,12 +4,15 @@ Visualize Apache DataFusion physical execution plans as interactive, color-coded
 
 **[Open the app](https://nga-tran.github.io/plan-visualizer/)**
 
-- Paste a plan, upload or drop a text file, or choose a single-node, custom, or distributed (alpha) sample, then click **Visualize**.
+- Paste a plan, upload or drop a text file, or choose a single-node, custom, distributed (beta), or metrics (alpha) sample.
+- Choose **Normal**, **Labels**, or **Labels + heatmap**, then click **Visualize**. Metric views let you select a metric; heatmaps offer Orange, Blue, and Purple palettes. Normal is the default.
 - Edit diagrams and export PNG, SVG, or Excalidraw JSON.
-- Click **Share** to copy a link that restores the plan text and automatically opens its diagram.
+- Click **Share** to copy a link that restores the plan text and selected display settings, then automatically opens its diagram. Older links still open in Normal mode.
 - Use light/dark themes, desktop/mobile layouts, and offline access after the app is cached.
 
-Share links contain compressed plan text and need no backend or account. Manual diagram edits are saved through JSON export. Very large plans must be shared as text files.
+Share links contain compressed plan text and display settings and need no backend or account. Manual diagram edits are saved through JSON export. Very large plans must be shared as text files.
+
+The two metrics samples are synthetic teaching examples with documented interpretation presets. For your own plans, expand **Metric interpretation** to select matching metric definitions or a distributed task format when numeric comparison requires them. Missing values display **Not reported**; measured zero remains distinct. Display changes apply on **Visualize**, which regenerates the diagram.
 
 ## Run locally
 
