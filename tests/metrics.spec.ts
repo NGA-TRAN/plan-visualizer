@@ -121,7 +121,7 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
     await page
       .getByRole("radio", { name: "Labels + heatmap", exact: true })
       .check();
-    for (const palette of ["orange", "blue", "purple"]) {
+    for (const palette of ["orange", "blue", "purple", "spectrum"]) {
       await page
         .getByRole("combobox", { name: "Color", exact: true })
         .selectOption(palette);
@@ -131,6 +131,7 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
         orange: "#ffc078",
         blue: "#91caff",
         purple: "#c4a1f2",
+        spectrum: "#ed8075",
       }[palette];
       const hottestOperator =
         sample === "single-node-metrics" ? "HashJoinExec" : "DataSourceExec";
@@ -150,6 +151,39 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
           (e) => operatorBodies.has(e.id) && e.backgroundColor === strongest,
         ),
       ).toBe(true);
+      const zeroOperator =
+        sample === "single-node-metrics" ? "ProjectionExec" : "DataSourceExec";
+      const zeroBodies = new Set(
+        scene.elements
+          .filter((e) => e.type === "text" && e.text === zeroOperator)
+          .map((e) => e.containerId),
+      );
+      expect(
+        scene.elements.some(
+          (e) => zeroBodies.has(e.id) && e.backgroundColor === "#ffffff",
+        ),
+        `${sample}: ${palette} must paint measured zero white`,
+      ).toBe(true);
+      const missing = scene.elements.find(
+        (e) => e.type === "text" && e.text === "CoalescePartitionsExec",
+      );
+      expect(missing?.containerId).toBeTruthy();
+      expect(
+        scene.elements.find((e) => e.id === missing!.containerId)?.backgroundColor,
+      ).not.toBe("#ffffff");
+      if (palette === "spectrum") {
+        const positiveFloor = scene.elements.find(
+          (e) => e.type === "text" && e.text === ">0",
+        );
+        expect(positiveFloor?.groupIds).toHaveLength(1);
+        const legend = scene.elements.filter((e) =>
+          e.groupIds.includes(positiveFloor!.groupIds[0]),
+        );
+        expect(legend.filter((e) => e.type === "rectangle")).toHaveLength(7);
+        expect(legend.filter((e) => e.type === "text").map((e) => e.text)).toEqual(
+          ["0", ">0", "20%", "40%", "60%", "80%", "100%"],
+        );
+      }
       expect(
         scene.elements.some(
           (e) => e.type === "text" && e.containerId && e.groupIds.length,
@@ -570,77 +604,87 @@ test("absent and invalid metrics do not suggest interpretation settings", async 
   }
 });
 
-test("shared links restore metric, palette and interpretation in a fresh session", async ({
-  page,
-  context,
-  browser,
-  baseURL,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("./");
-  await page.selectOption("#sample-metrics", "distributed-metrics");
-  await page
-    .getByRole("radio", { name: "Labels + heatmap", exact: true })
-    .check();
-  await page
-    .getByRole("combobox", { name: "Metric", exact: true })
-    .selectOption("output_rows");
-  await page
-    .getByRole("combobox", { name: "Color", exact: true })
-    .selectOption("blue");
-  await page.getByRole("button", { name: "Share", exact: true }).click();
-  await expect(
-    page.getByText("Plan link copied!", { exact: true }).first(),
-  ).toBeVisible();
-  const link = await page.evaluate(() => navigator.clipboard.readText());
-  const payload = JSON.parse(
-    gunzipSync(
-      Buffer.from(new URL(link).hash.slice(9), "base64url"),
-    ).toString(),
-  );
-  expect(payload.settings).toMatchObject({
-    display: "heatmap",
-    metric: "output_rows",
-    palette: "blue",
-    interpretation: {
-      metricProfile: "datafusion-7865139",
-      exportProfile: "distributed-b32ee66",
-    },
-  });
-  const recipientContext = await browser.newContext();
-  try {
-    await recipientContext.addInitScript(() => {
-      for (const method of [
-        "showOpenFilePicker",
-        "showSaveFilePicker",
-        "showDirectoryPicker",
-      ])
-        Reflect.deleteProperty(window, method);
-    });
-    const recipient = await recipientContext.newPage();
-    await recipient.goto(baseURL! + new URL(link).hash);
+for (const palette of ["blue", "spectrum"] as const) {
+  test(`${palette}: shared links restore metric, palette and interpretation in a fresh session`, async ({
+    page,
+    context,
+    browser,
+    baseURL,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("./");
+    await page.selectOption("#sample-metrics", "distributed-metrics");
+    await page
+      .getByRole("radio", { name: "Labels + heatmap", exact: true })
+      .check();
+    await page
+      .getByRole("combobox", { name: "Metric", exact: true })
+      .selectOption("output_rows");
+    await page
+      .getByRole("combobox", { name: "Color", exact: true })
+      .selectOption(palette);
+    await page.getByRole("button", { name: "Share", exact: true }).click();
     await expect(
-      recipient.getByRole("radio", { name: "Labels + heatmap", exact: true }),
-    ).toBeChecked();
-    await expect(
-      recipient.getByRole("combobox", { name: "Metric", exact: true }),
-    ).toHaveValue("output_rows");
-    await expect(
-      recipient.getByRole("combobox", { name: "Color", exact: true }),
-    ).toHaveValue("blue");
-    await expect(recipient.locator(".excalidraw canvas").first()).toBeVisible();
-    await expect(recipient.getByRole("alert")).toHaveCount(0);
-    const scene = await exportScene(recipient);
-    expect(
-      scene.elements.some((e) => e.text?.includes("output_rows — ready")),
-    ).toBe(true);
-    expect(scene.elements.some((e) => e.backgroundColor === "#91caff")).toBe(
-      true,
+      page.getByText("Plan link copied!", { exact: true }).first(),
+    ).toBeVisible();
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    const payload = JSON.parse(
+      gunzipSync(
+        Buffer.from(new URL(link).hash.slice(9), "base64url"),
+      ).toString(),
     );
-  } finally {
-    await recipientContext.close();
-  }
-});
+    expect(payload.settings).toMatchObject({
+      display: "heatmap",
+      metric: "output_rows",
+      palette,
+      interpretation: {
+        metricProfile: "datafusion-7865139",
+        exportProfile: "distributed-b32ee66",
+      },
+    });
+    const recipientContext = await browser.newContext();
+    try {
+      await recipientContext.addInitScript(() => {
+        for (const method of [
+          "showOpenFilePicker",
+          "showSaveFilePicker",
+          "showDirectoryPicker",
+        ])
+          Reflect.deleteProperty(window, method);
+      });
+      const recipient = await recipientContext.newPage();
+      await recipient.goto(baseURL! + new URL(link).hash);
+      await expect(
+        recipient.getByRole("radio", { name: "Labels + heatmap", exact: true }),
+      ).toBeChecked();
+      await expect(
+        recipient.getByRole("combobox", { name: "Metric", exact: true }),
+      ).toHaveValue("output_rows");
+      await expect(
+        recipient.getByRole("combobox", { name: "Color", exact: true }),
+      ).toHaveValue(palette);
+      await expect(recipient.locator(".excalidraw canvas").first()).toBeVisible();
+      await expect(recipient.getByRole("alert")).toHaveCount(0);
+      const scene = await exportScene(recipient);
+      expect(
+        scene.elements.some((e) => e.text?.includes("output_rows — ready")),
+      ).toBe(true);
+      const sources = new Set(
+        scene.elements
+          .filter((e) => e.type === "text" && e.text === "DataSourceExec")
+          .map((e) => e.containerId),
+      );
+      const strongest = palette === "spectrum" ? "#ed8075" : "#91caff";
+      expect(
+        scene.elements.some(
+          (e) => sources.has(e.id) && e.backgroundColor === strongest,
+        ),
+      ).toBe(true);
+    } finally {
+      await recipientContext.close();
+    }
+  });
+}
 
 test("mobile controls fit and render a heatmap", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
