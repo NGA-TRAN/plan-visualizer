@@ -12,7 +12,7 @@ Visualize Apache DataFusion physical execution plans as interactive, color-coded
 
 Share links contain compressed plan text and display settings and need no backend or account. Manual diagram edits are saved through JSON export. Very large plans must be shared as text files.
 
-The two metrics samples are synthetic teaching examples with documented interpretation presets. For your own plans, expand **Metric interpretation** to select matching metric definitions or a distributed task format when numeric comparison requires them. Missing values display **Not reported**; measured zero remains distinct. Display changes apply on **Visualize**, which regenerates the diagram.
+Metric interpretation is automatic by default: paste or upload a plan, choose **Labels** or **Labels + heatmap**, and click **Visualize**. The app applies supported DataFusion metric definitions and distributed task interpretation when they enable numeric comparison. These are assumed defaults, not verified producer metadata. Use **Advanced metric interpretation** to override them or turn automatic interpretation off. In manual mode, missing settings are highlighted when they would enable a heatmap. Missing values display **Not reported**; measured zero remains distinct. Display changes apply on **Visualize**, which regenerates the diagram. The two metrics samples are synthetic teaching examples.
 
 ## Run locally
 

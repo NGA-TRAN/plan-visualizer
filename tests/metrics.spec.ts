@@ -58,6 +58,18 @@ async function render(page: Page, expectedText: string) {
   await expect(page.locator("#plan-input")).not.toHaveClass(/border-red-300/);
 }
 
+async function useManualInterpretation(page: Page) {
+  await page
+    .getByText("Advanced metric interpretation", { exact: true })
+    .click();
+  await page
+    .getByRole("checkbox", {
+      name: "Choose interpretation automatically",
+      exact: true,
+    })
+    .uncheck();
+}
+
 async function exportScene(page: Page) {
   await page.getByTestId("main-menu-trigger").click();
   await page.getByText("Save to...", { exact: true }).click();
@@ -120,9 +132,24 @@ for (const sample of ["single-node-metrics", "distributed-metrics"]) {
         blue: "#91caff",
         purple: "#c4a1f2",
       }[palette];
-      expect(scene.elements.some((e) => e.backgroundColor === strongest)).toBe(
-        true,
+      const hottestOperator =
+        sample === "single-node-metrics" ? "HashJoinExec" : "DataSourceExec";
+      const operatorBodies = new Set(
+        scene.elements
+          .filter(
+            (e) =>
+              e.type === "text" &&
+              (e.text === hottestOperator ||
+                e.text?.startsWith(hottestOperator + ":")),
+          )
+          .map((e) => e.containerId),
       );
+      // A colored legend alone does not establish that any operator is colored.
+      expect(
+        scene.elements.some(
+          (e) => operatorBodies.has(e.id) && e.backgroundColor === strongest,
+        ),
+      ).toBe(true);
       expect(
         scene.elements.some(
           (e) => e.type === "text" && e.containerId && e.groupIds.length,
@@ -153,7 +180,9 @@ test("missing metrics stay selected, and pasted plans do not inherit sample assu
   await page
     .locator("#plan-input")
     .fill("ProjectionExec: expr=[item@0 as item]\n  EmptyExec");
-  await page.getByText("Metric interpretation", { exact: true }).click();
+  await page
+    .getByText("Advanced metric interpretation", { exact: true })
+    .click();
   await expect(
     page.getByRole("combobox", { name: "Metric definitions", exact: true }),
   ).toHaveValue("");
@@ -181,15 +210,21 @@ test("manual metric interpretation enables comparison and keeps zero distinct fr
   await page
     .getByRole("combobox", { name: "Metric", exact: true })
     .selectOption("output_rows");
+  await useManualInterpretation(page);
   await render(page, "output_rows — incomparable");
   const raw = await exportScene(page);
   expect(raw.elements.some((e) => e.backgroundColor === "#ffc078")).toBe(false);
   expect(raw.elements.some((e) => e.text === "0 (raw)")).toBe(true);
-  await page.getByText("Metric interpretation", { exact: true }).click();
   const definitions = page.getByRole("combobox", {
     name: "Metric definitions",
     exact: true,
   });
+  await expect(definitions).toBeVisible();
+  const setup = page
+    .getByRole("status")
+    .filter({ hasText: "Heatmap setup required" });
+  await expect(setup).toContainText("Choose Metric definitions below");
+  await expect(setup).not.toContainText("Task metrics");
   await expect(definitions).toHaveValue("");
   await definitions.selectOption("datafusion-7865139");
   await render(page, "output_rows — ready");
@@ -230,7 +265,10 @@ test("comparison groups are selected explicitly, shared, and reset after metric 
   await page
     .getByRole("radio", { name: "Labels + heatmap", exact: true })
     .check();
-  await page.getByText("Metric interpretation", { exact: true }).click();
+  await useManualInterpretation(page);
+  await expect(
+    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("combobox", { name: "Metric definitions", exact: true })
     .selectOption("datafusion-7865139");
@@ -275,6 +313,261 @@ test("comparison groups are selected explicitly, shared, and reset after metric 
     .getByRole("combobox", { name: "Metric", exact: true })
     .selectOption("elapsed_compute");
   await expect(group).toHaveValue("");
+});
+
+for (const inputMethod of ["paste", "upload"] as const) {
+  test(`${inputMethod}: distributed heatmap works without choosing interpretation settings`, async ({
+    page,
+  }, testInfo) => {
+    if (inputMethod === "upload")
+      await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("./");
+    if (inputMethod === "paste") {
+      await page
+        .locator("#plan-input")
+        .fill(readFileSync(metricSample + "distributed-metrics.sql", "utf8"));
+      await page
+        .getByRole("radio", { name: "Labels + heatmap", exact: true })
+        .check();
+    } else {
+      await page
+        .locator("#plan-file-upload")
+        .setInputFiles(metricSample + "distributed-metrics.sql");
+      await page
+        .getByRole("combobox", { name: "Display", exact: true })
+        .selectOption("heatmap");
+    }
+    await page
+      .getByRole("combobox", { name: "Metric", exact: true })
+      .selectOption("output_batches");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Heatmap setup required" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+    ).toHaveCount(0);
+    await render(page, "Exec");
+    await page.screenshot({
+      path: testInfo.outputPath(`automatic-heatmap-${inputMethod}.png`),
+      fullPage: true,
+    });
+    if (inputMethod === "upload") {
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(390);
+      await page.setViewportSize({ width: 1440, height: 1000 });
+    }
+    const scene = await exportScene(page);
+    expect(
+      scene.elements.some((e) => e.text?.includes("output_batches — ready")),
+    ).toBe(true);
+    const bodies = new Set(
+      scene.elements
+        .filter((e) => e.text === "DataSourceExec")
+        .map((e) => e.containerId),
+    );
+    expect(
+      scene.elements.some(
+        (e) => bodies.has(e.id) && e.backgroundColor === "#ffc078",
+      ),
+    ).toBe(true);
+    await page
+      .getByText("Advanced metric interpretation", { exact: true })
+      .click();
+    await expect(
+      page.getByRole("checkbox", {
+        name: "Choose interpretation automatically",
+        exact: true,
+      }),
+    ).toBeChecked();
+    await expect(
+      page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+    ).toHaveValue("datafusion-7865139");
+    await expect(
+      page.getByRole("combobox", { name: "Task metrics", exact: true }),
+    ).toHaveValue("distributed-b32ee66");
+  });
+}
+
+test("automatic interpretation resolves mixed scalar and task metrics in one visualization", async ({
+  page,
+}) => {
+  const plan = readFileSync(
+    metricSample + "distributed-metrics.sql",
+    "utf8",
+  ).replace(
+    "preserve_partitioning=[false]",
+    "preserve_partitioning=[false], metrics=[output_batches=1]",
+  );
+  await page.goto("./");
+  await page.locator("#plan-input").fill(plan);
+  await page
+    .getByRole("radio", { name: "Labels + heatmap", exact: true })
+    .check();
+  await page
+    .getByRole("combobox", { name: "Metric", exact: true })
+    .selectOption("output_batches");
+  await render(page, "Exec");
+  const group = page.getByRole("combobox", {
+    name: "Comparison group",
+    exact: true,
+  });
+  await expect(group.locator("option")).toHaveCount(3);
+  await page
+    .getByText("Advanced metric interpretation", { exact: true })
+    .click();
+  await expect(
+    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+  ).toHaveValue("datafusion-7865139");
+  await expect(
+    page.getByRole("combobox", { name: "Task metrics", exact: true }),
+  ).toHaveValue("distributed-b32ee66");
+  await group.selectOption({
+    label: "output_batches / instance / assumed-profile",
+  });
+  await render(page, "Exec");
+  const scene = await exportScene(page);
+  expect(
+    scene.elements.some((e) => e.text?.includes("output_batches — ready")),
+  ).toBe(true);
+  const bodies = new Set(
+    scene.elements
+      .filter((e) => e.text === "DataSourceExec")
+      .map((e) => e.containerId),
+  );
+  expect(
+    scene.elements.some(
+      (e) => bodies.has(e.id) && e.backgroundColor === "#ffc078",
+    ),
+  ).toBe(true);
+});
+
+test("older shared heatmaps with empty settings use automatic interpretation", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const plan = readFileSync(metricSample + "distributed-metrics.sql", "utf8");
+  const settings = {
+    display: "heatmap",
+    metric: "output_batches",
+    palette: "purple",
+    interpretation: {},
+  };
+  await page.goto(
+    "./#plan=v2." +
+      gzipSync(JSON.stringify({ plan, settings })).toString("base64url"),
+  );
+  await expect(page.locator(".excalidraw canvas").first()).toBeVisible();
+  const scene = await exportScene(page);
+  expect(
+    scene.elements.some((e) => e.text?.includes("output_batches — ready")),
+  ).toBe(true);
+  const bodies = new Set(
+    scene.elements
+      .filter((e) => e.text === "DataSourceExec")
+      .map((e) => e.containerId),
+  );
+  expect(
+    scene.elements.some(
+      (e) => bodies.has(e.id) && e.backgroundColor === "#c4a1f2",
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect(
+    page.getByText("Plan link copied!", { exact: true }).first(),
+  ).toBeVisible();
+  const link = await page.evaluate(() => navigator.clipboard.readText());
+  const payload = JSON.parse(
+    gunzipSync(
+      Buffer.from(new URL(link).hash.slice(9), "base64url"),
+    ).toString(),
+  );
+  expect(payload.settings.interpretation).toEqual({
+    metricProfile: "datafusion-7865139",
+    exportProfile: "distributed-b32ee66",
+  });
+  await expect(
+    page.getByRole("combobox", { name: "Metric", exact: true }),
+  ).toHaveValue("output_batches");
+  await expect(
+    page.getByRole("combobox", { name: "Color", exact: true }),
+  ).toHaveValue("purple");
+});
+
+test("shared manual interpretation stays manual and can switch back to automatic", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const plan = readFileSync(metricSample + "distributed-metrics.sql", "utf8");
+  const settings = {
+    display: "heatmap",
+    metric: "output_batches",
+    palette: "orange",
+    interpretation: {},
+    automaticInterpretation: false,
+  };
+  await page.goto(
+    "./#plan=v2." +
+      gzipSync(JSON.stringify({ plan, settings })).toString("base64url"),
+  );
+  const setup = page
+    .getByRole("status")
+    .filter({ hasText: "Heatmap setup required" });
+  await expect(setup).toContainText("Metric definitions and Task metrics");
+  await expect(
+    page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+  ).toHaveValue("");
+  await expect(
+    page.getByRole("combobox", { name: "Task metrics", exact: true }),
+  ).toHaveValue("");
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await expect(
+    page.getByText("Plan link copied!", { exact: true }).first(),
+  ).toBeVisible();
+  const link = await page.evaluate(() => navigator.clipboard.readText());
+  const payload = JSON.parse(
+    gunzipSync(
+      Buffer.from(new URL(link).hash.slice(9), "base64url"),
+    ).toString(),
+  );
+  expect(payload.settings.automaticInterpretation).toBe(false);
+  expect(payload.settings.interpretation).toEqual({});
+  await page
+    .getByRole("checkbox", {
+      name: "Choose interpretation automatically",
+      exact: true,
+    })
+    .check();
+  await expect(setup).toHaveCount(0);
+  await render(page, "Exec");
+  const scene = await exportScene(page);
+  expect(
+    scene.elements.some((e) => e.text?.includes("output_batches — ready")),
+  ).toBe(true);
+});
+
+test("absent and invalid metrics do not suggest interpretation settings", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await page
+    .getByRole("radio", { name: "Labels + heatmap", exact: true })
+    .check();
+  for (const plan of [
+    "EmptyExec",
+    "EmptyExec, metrics=[elapsed_compute=NaN]",
+  ]) {
+    await page.locator("#plan-input").fill(plan);
+    await render(page, "Exec");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Heatmap setup required" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("combobox", { name: "Metric definitions", exact: true }),
+    ).toHaveCount(0);
+  }
 });
 
 test("shared links restore metric, palette and interpretation in a fresh session", async ({
@@ -381,6 +674,7 @@ test("rejects unsupported shared view settings", async ({ page }) => {
     { palette: "red" },
     { interpretation: { metricProfile: "unknown" } },
     { input: { section: -1 } },
+    { automaticInterpretation: "invalid" },
   ]) {
     const settings = {
       display: "heatmap",

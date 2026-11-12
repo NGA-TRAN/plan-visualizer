@@ -127,6 +127,9 @@ Metrics checks cover both synthetic samples in all three display modes, all
 palettes, metric selection, exported scenes, view sharing, missing measurements,
 manual interpretation settings, zero versus missing values, comparison-group
 sharing and resets, and stale asynchronous conversions.
+Interpretation checks exercise automatic defaults for pasted, uploaded and shared
+distributed metric maps, manual overrides and setup guidance, mobile layouts,
+and absent or invalid measurements that must remain uncolored.
 
 For deployment-path verification:
 
@@ -143,6 +146,9 @@ the copied link with your local app URL, keeping the entire `#plan=…` fragment
 Opening the link restores the text, display mode, metric, palette, interpretation
 assumptions, and any selected comparison group or physical variant, then renders
 the diagram automatically.
+Automatic/manual interpretation preference and the definitions applied during
+visualization are also shared. Older v2 links without the preference use automatic
+interpretation; v1 text-only links still open in Normal mode.
 
 New links use `#plan=v2.`: gzip-compressed UTF-8 JSON containing `plan` and
 `settings`, encoded as URL-safe base64. Legacy `#plan=v1.` compressed text links

@@ -22,6 +22,7 @@ export function PlanInput({
   onUploadFile,
   viewSettings,
   onViewSettingsChange,
+  onControlsHeightChange,
   isLoading = false,
   metricReport,
   diagnostics = [],
@@ -183,6 +184,7 @@ export function PlanInput({
         plan={value}
         settings={viewSettings}
         onChange={onViewSettingsChange}
+        onHeightChange={onControlsHeightChange}
         isSample={samples.some(
           (s) => s.id === selectedSampleId && s.category === "metrics",
         )}
@@ -198,7 +200,7 @@ export function PlanInput({
               ? "Selected metric: Not reported in this plan."
               : metricReport.status === "cohort-required"
                 ? "Choose a comparison group, then click Visualize."
-                : "Values are shown as reported. Numeric comparison is unavailable; check Metric interpretation."}
+                : "Displayed diagram: values are shown as reported. Review Metric interpretation, then click Visualize to update it."}
           </p>
         )}
       {diagnostics.length > 0 && (

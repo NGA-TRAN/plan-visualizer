@@ -19,6 +19,8 @@ export interface PlanViewSettings {
   metric: string;
   palette: PaletteId;
   interpretation: ProfileOptions;
+  /** Older links without this preference use automatic interpretation. */
+  automaticInterpretation?: boolean;
   cohort?: string;
   input?: InputSelection;
 }
@@ -28,6 +30,7 @@ export const DEFAULT_PLAN_VIEW: PlanViewSettings = {
   metric: "elapsed_compute",
   palette: "orange",
   interpretation: {},
+  automaticInterpretation: true,
 };
 
 export function planViewOptions(settings: PlanViewSettings): PlanViewOptions {
@@ -50,6 +53,11 @@ export function isPlanViewSettings(
 ): value is PlanViewSettings {
   if (!value || typeof value !== "object") return false;
   const settings = value as Record<string, unknown>;
+  if (
+    settings.automaticInterpretation !== undefined &&
+    typeof settings.automaticInterpretation !== "boolean"
+  )
+    return false;
   if (
     !capabilities.displays.some((d) => d.id === settings.display) ||
     !capabilities.metrics.some(

@@ -1,7 +1,13 @@
 // PlanVisualizerPage Component
 // Main page orchestrating plan input, conversion, and visualization
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type CSSProperties,
+} from "react";
 import { useLocation } from "react-router-dom";
 import { Card } from "@/shared/components";
 import { useAppStore } from "@/store";
@@ -28,6 +34,7 @@ export function PlanVisualizerPage() {
   const [loadedFileName, setLoadedFileName] = useState<string | null>(null);
   const [viewSettings, setViewSettings] =
     useState<PlanViewSettings>(DEFAULT_PLAN_VIEW);
+  const [controlsHeight, setControlsHeight] = useState(32);
   // Subscribe to theme changes from store - this ensures Excalidraw updates when theme toggle is clicked
   // The theme prop is passed to ExcalidrawCanvas which passes it to Excalidraw component
   const theme = useAppStore((state) => state.theme.resolved);
@@ -56,9 +63,12 @@ export function PlanVisualizerPage() {
         setViewSettings(shared.settings);
         setSelectedSampleId(null);
         setLoadedFileName(null);
-        await convert(shared.plan, shared.settings);
-        if (!cancelled && requestId === sharedLoadId.current)
+        const result = await convert(shared.plan, shared.settings);
+        if (!cancelled && requestId === sharedLoadId.current) {
+          if (result?.success && result.settings)
+            setViewSettings(result.settings);
           setIsLoadingSharedPlan(false);
+        }
       },
       (error: unknown) => {
         if (cancelled || requestId !== sharedLoadId.current) return;
@@ -97,6 +107,7 @@ export function PlanVisualizerPage() {
     if (!result) return;
 
     if (result.success) {
+      if (result.settings) setViewSettings(result.settings);
       // Save plan to IndexedDB for offline access
       try {
         if (result.scene) {
@@ -122,7 +133,10 @@ export function PlanVisualizerPage() {
         ...previous,
         cohort: undefined,
         input: undefined,
-        interpretation: selectedSampleId ? {} : previous.interpretation,
+        interpretation:
+          selectedSampleId || previous.automaticInterpretation !== false
+            ? {}
+            : previous.interpretation,
       }));
     },
     [cancelSharedLoad, selectedSampleId],
@@ -188,22 +202,33 @@ export function PlanVisualizerPage() {
       {/* Main Content - Resizable Layout */}
       <div
         ref={containerRef}
-        className="flex flex-col gap-0 h-[calc(100vh-64px)]"
+        className="flex flex-col gap-0 [--normal-input-min:450px] [--metrics-input-min:570px] sm:[--normal-input-min:390px] sm:[--metrics-input-min:470px] lg:[--normal-input-min:340px] lg:[--metrics-input-min:420px]"
+        style={
+          {
+            "--controls-extra-height": `${Math.max(0, controlsHeight - 32)}px`,
+            "--input-min-height":
+              viewSettings.display === "off"
+                ? "var(--normal-input-min)"
+                : "max(var(--metrics-input-min), calc(var(--normal-input-min) + var(--controls-extra-height) + 40px))",
+            height:
+              "max(calc(100vh - 64px), calc(var(--input-min-height) + 204px))",
+          } as CSSProperties
+        }
       >
         {/* Input Panel */}
         <div
           style={{
             height: `${inputHeight * 100}%`,
             maxHeight: "80%",
+            minHeight: "var(--input-min-height)",
           }}
-          className={cn(
-            "flex-shrink-0",
-            viewSettings.display === "off"
-              ? "min-h-[450px] sm:min-h-[390px] lg:min-h-[340px]"
-              : "min-h-[570px] sm:min-h-[470px] lg:min-h-[420px]",
-          )}
+          className="flex-shrink-0"
         >
-          <Card className="p-3 sm:p-4 h-full overflow-y-auto">
+          <Card
+            role="region"
+            aria-label="Execution plan input"
+            className="p-3 sm:p-4 h-full overflow-y-auto"
+          >
             {isLoadingSharedPlan && (
               <p role="status" className="mb-2 text-sm text-gray-500">
                 Opening shared plan…
@@ -224,6 +249,7 @@ export function PlanVisualizerPage() {
               onUploadFile={handleUploadFile}
               viewSettings={viewSettings}
               onViewSettingsChange={handleViewSettingsChange}
+              onControlsHeightChange={setControlsHeight}
               isLoading={state.status === "converting"}
               metricReport={state.metricReport}
               diagnostics={state.diagnostics}

@@ -178,7 +178,7 @@ export function ExcalidrawCanvas({
     return (
       <div
         className={cn(
-          "h-full min-h-[400px] rounded-lg border",
+          "h-full min-h-[200px] rounded-lg border",
           "bg-white dark:bg-gray-800",
           "border-gray-200 dark:border-gray-700",
         )}

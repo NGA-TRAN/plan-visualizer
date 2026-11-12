@@ -43,6 +43,7 @@ export interface ConversionState {
 
 /** Result returned by the plan converter */
 export interface ConversionResult {
+  settings?: PlanViewSettings;
   /** Whether conversion was successful */
   success: boolean;
 
@@ -76,6 +77,7 @@ export interface PlanInputProps {
 
   viewSettings: PlanViewSettings;
   onViewSettingsChange: (settings: PlanViewSettings) => void;
+  onControlsHeightChange?: (height: number) => void;
   metricReport?: MetricViewReport | null;
   diagnostics?: string[];
 

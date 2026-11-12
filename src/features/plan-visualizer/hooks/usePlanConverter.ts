@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { planViewOptions, type PlanViewSettings } from "../utils/planView";
+import { resolveMetricInterpretation } from "../utils/metricInterpretation";
 import {
   type ExcalidrawElement,
   type ExcalidrawScene,
@@ -87,13 +88,22 @@ export function usePlanConverter(): UsePlanConverterReturn {
 
         // Convert using plan-viz library (returns full Excalidraw JSON scene)
         // Load conversion code only when requested, keeping the input UI lightweight.
-        const { convertPlanToExcalidraw, convertPlanView } =
-          await import("plan-viz");
+        const library = await import("plan-viz");
+        const { convertPlanToExcalidraw, convertPlanView } = library;
+        if (currentRequest !== requestId.current) return null;
+        const effectiveSettings = await resolveMetricInterpretation(
+          library,
+          trimmedPlan,
+          settings,
+        );
         if (currentRequest !== requestId.current) return null;
         const view =
           settings.display === "off" && !settings.input
             ? null
-            : await convertPlanView(trimmedPlan, planViewOptions(settings));
+            : await convertPlanView(
+                trimmedPlan,
+                planViewOptions(effectiveSettings),
+              );
         if (currentRequest !== requestId.current) return null;
         const result = view ? view.scene : convertPlanToExcalidraw(trimmedPlan);
         // plan-viz emits Excalidraw JSON, but its declarations use broader types
@@ -158,6 +168,7 @@ export function usePlanConverter(): UsePlanConverterReturn {
           elements,
           nodeCount,
           scene: centeredScene,
+          settings: effectiveSettings,
         };
       } catch (err) {
         if (currentRequest !== requestId.current) return null;
